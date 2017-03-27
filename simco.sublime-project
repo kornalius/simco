@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				".gitignore",
+				"simco.sublime-project",
+				"simco.sublime-workspace"
+			],
+			"path": "."
+		}
+	]
+}

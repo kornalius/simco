@@ -1,0 +1,10 @@
+@import url(./colors.css);
+
+body {
+  background-color: var(--main-background-color);
+  color: var(--main-color);
+}
+
+canvas {
+  cursor: none !important;
+}
