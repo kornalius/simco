@@ -1,8 +1,8 @@
-import { async } from './utils.js'
-import { defaults } from './globals.js'
-
 import 'pixi.js'
 import 'web-audio-daw'
+
+import { async } from './utils.js'
+import { defaults } from './globals.js'
 
 // import css from '../style/main.css'
 // import t from '../html/main.html'
@@ -13,12 +13,12 @@ import 'web-audio-daw'
 
 import { Emitter } from './emitter.js'
 
-import Memory from './memory.js'
-import MemoryManager from './memorymanager.js'
-import Interrupt from './interrupt.js'
-import Video from './video.js'
-import Keyboard from './keyboard.js'
-import Mouse from './mouse.js'
+import { Memory } from './vm/memory.js'
+import MemoryManager from './vm/memorymanager.js'
+import Interrupt from './vm/interrupt.js'
+import Video from './vm/chips/video.js'
+import Keyboard from './vm/chips/keyboard.js'
+import Mouse from './vm/chips/mouse.js'
 
 // import { VM } from './interpreter/vm.js'
 
@@ -122,7 +122,7 @@ export class Main extends Emitter {
     this.LE = c[0] === 0xef
   }
 
-  default (name) { return defaults[name] }
+  default (name) { return _.get(defaults, name) }
 
   get status () { return this._status }
   set status (value) {
@@ -140,6 +140,9 @@ export class Main extends Emitter {
   get video_chip () { return this._video_chip }
   get keyboard_chip () { return this._keyboard_chip }
   get mouse_chip () { return this._mouse_chip }
+
+  get stage () { return this._video_chip._stage }
+  get renderer () { return this._video_chip._renderer }
 
   onResize () {
     this._video_chip.emit('resize')

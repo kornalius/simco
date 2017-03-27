@@ -10,7 +10,7 @@ PIXI.Rectangle.prototype.toString = function () {
   return _.template('(#{x}, #{y}, #{x + width}, #{y + height})(#{width}, #{height})')(this)
 }
 
-let defaults = {
+const defaults = {
   boundscheck: false,
 
   type: 'i32',
@@ -20,32 +20,34 @@ let defaults = {
   },
 
   memory_manager: {
-    collect_delay: 30720,
-  },
-
-  palette: {
-    count: 32,
-  },
-
-  font: {
-    count: 255,
-    width: 8,
-    height: 12,
-  },
-
-  text: {
-  },
-
-  sprite: {
-    count: 32,
-    width: 16,
-    height: 16,
+    collect_delay: 30 * 1000,
   },
 
   video: {
     width: 320,
     height: 240,
     scale: 4,
+  },
+
+  palette: {
+    count: 16,
+  },
+
+  font: {
+    count: 255,
+    width: 4,
+    height: 6,
+  },
+
+  text: {
+    width: 320 / 4,
+    height: 240 / 6,
+  },
+
+  sprite: {
+    count: 32,
+    width: 16,
+    height: 16,
   },
 
   keyboard: {

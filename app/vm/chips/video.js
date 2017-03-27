@@ -1,6 +1,7 @@
 import Palette from './palette.js'
 import Font from './font.js'
 import Text from './text.js'
+import Cursor from './cursor.js'
 import Sprite from './sprite.js'
 import { Overlays } from '../overlays.js'
 
@@ -13,13 +14,6 @@ export default class Video extends Chip {
 
     this.init('i8', 'video', ['width', 'height', 'scale'])
 
-    this._palette_chip = new Palette(main)
-    this._font_chip = new Font(main)
-    this._text_chip = new Text(main)
-    this._sprite_chip = new Sprite(main)
-
-    this._force_update = false
-
     this._renderer = new PIXI.autoDetectRenderer(this._width * this._scale, this._height * this._scale, {})
     this._renderer.view.style.position = 'absolute'
     this._renderer.view.style.cursor = 'none'
@@ -29,20 +23,26 @@ export default class Video extends Chip {
     this._stage = new PIXI.Container()
     this._stage.scale = new PIXI.Point(this._scale, this._scale)
 
-    this._overlays = new Overlays(this, {
-      screen: {},
-      scanlines: {},
-      scanline: {},
-      rgb: {},
-      noises: {},
-      crt: {},
-      monitor: {},
-    })
-
     this._onResize = this.resize.bind(this)
     this.on('resize', this._onResize)
 
-    this.reset()
+    this.async(function () {
+      this._palette_chip = new Palette(main)
+      this._font_chip = new Font(main)
+      this._text_chip = new Text(main)
+      this._cursor_chip = new Cursor(main)
+      this._sprite_chip = new Sprite(main)
+      this._overlays = new Overlays(this, {
+        screen: {},
+        scanlines: {},
+        scanline: {},
+        rgb: {},
+        noises: {},
+        crt: {},
+        monitor: {},
+      })
+      this.reset()
+    })
   }
 
   destroy () {
@@ -51,6 +51,7 @@ export default class Video extends Chip {
     this._palette_chip.destroy()
     this._font_chip.destroy()
     this._text_chip.destroy()
+    this._cursor_chip.destroy()
     this._sprite_chip.destroy()
 
     this._overlays.destroy()
@@ -83,6 +84,7 @@ export default class Video extends Chip {
     this._palette_chip.reset()
     this._font_chip.reset()
     this._text_chip.reset()
+    this._cursor_chip.reset()
     this._sprite_chip.reset()
     this._overlays.reset()
 
@@ -105,6 +107,13 @@ export default class Video extends Chip {
     this.resize()
   }
 
+  get video_chip () { return this }
+  get palette_chip () { return this._palette_chip }
+  get font_chip () { return this._font_chip }
+  get text_chip () { return this._text_chip }
+  get cursor_chip () { return this._cursor_chip }
+  get sprite_chip () { return this._sprite_chip }
+
   get overlays () { return this._overlays }
 
   get stage () { return this._stage }
@@ -124,6 +133,7 @@ export default class Video extends Chip {
     this._palette_chip.tick(delta)
     this._font_chip.tick(delta)
     this._text_chip.tick(delta)
+    this._cursor_chip.tick(delta)
     this._sprite_chip.tick(delta)
 
     if (this._force_update) {
@@ -225,11 +235,6 @@ export default class Video extends Chip {
     this._overlays.resize()
 
     return this
-  }
-
-  clear (c = 0) {
-    this._data.fill(c)
-    return this.refresh(true)
   }
 
   pixel (i, c) {

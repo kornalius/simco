@@ -1,4 +1,5 @@
 import { Emitter } from '../../emitter.js'
+import { async } from '../../utils.js'
 import { data_type_sizes, data_type_fns } from '../memory.js'
 
 export default class Chip extends Emitter {
@@ -43,7 +44,7 @@ export default class Chip extends Emitter {
   get palette_chip () { return this.video_chip.palette_chip }
   get font_chip () { return this.video_chip.font_chip }
   get text_chip () { return this.video_chip.text_chip }
-  get text_cursor_chip () { return this.text_chip.cursor_chip }
+  get cursor_chip () { return this.text_chip.cursor_chip }
   get sprite_chip () { return this.video_chip.sprite_chip }
 
   get data () { return this._data }
@@ -80,6 +81,10 @@ export default class Chip extends Emitter {
     this.video_chip.force_update = true
     this.video_chip.refresh(flip)
     return this
+  }
+
+  async (fn, args, delay) {
+    async(this, fn, args, delay)
   }
 
 }

@@ -4,6 +4,7 @@ const { app, BrowserWindow } = remote
 
 const _ = require('underscore-plus')
 _.extend(_, require('lodash'))
+window._ = _
 
 _.templateSettings.interpolate = /#{([\s\S]+?)}/g
 

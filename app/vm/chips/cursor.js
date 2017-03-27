@@ -1,12 +1,12 @@
 import Chip from './chip.js'
 
-export default class TextCursor extends Chip {
+export default class Cursor extends Chip {
 
   constructor (main) {
     super(main)
 
-    this._width = Math.trunc(this.text_chip.width / this.video_chip.font_chip.width)
-    this._height = Math.trunc(this.text_chip.height / this.video_chip.font_chip.height)
+    this._width = this.font_chip.width
+    this._height = this.font_chip.height
 
     this.reset()
   }

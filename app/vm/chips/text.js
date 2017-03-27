@@ -1,5 +1,4 @@
 import Chip from './chip.js'
-import TextCursor from './textcursor.js'
 
 export default class Text extends Chip {
 
@@ -7,8 +6,6 @@ export default class Text extends Chip {
     super(main)
 
     this.init(3, 'text', ['width', 'height'])
-
-    this._cursor_chip = new TextCursor(main)
 
     this.reset()
   }
@@ -74,8 +71,8 @@ export default class Text extends Chip {
     let { x, y } = this.pos()
     this._data.set([ch.charCodeAt(0), fg, bg], this.index(x, y))
 
-    this._cursor_chip.x++
-    if (this._cursor_chip.x > this._width) {
+    this.cursor_chip.x++
+    if (this.cursor_chip.x > this._width) {
       this.cr()
     }
 
@@ -89,15 +86,15 @@ export default class Text extends Chip {
     return this
   }
 
-  pos () { return { x: this._cursor_chip.x, y: this._cursor_chip.y } }
+  pos () { return { x: this.cursor_chip.x, y: this.cursor_chip.y } }
 
-  move_to (x, y) { return this._cursor_chip.move_to(x, y) }
+  move_to (x, y) { return this.cursor_chip.move_to(x, y) }
 
-  move_by (x, y) { return this._cursor_chip.move_by(x, y) }
+  move_by (x, y) { return this.cursor_chip.move_by(x, y) }
 
-  bol () { return this.move_to(1, this._cursor_chip.y) }
+  bol () { return this.move_to(1, this.cursor_chip.y) }
 
-  eol () { return this.move_to(this._width, this._cursor_chip.y) }
+  eol () { return this.move_to(this._width, this.cursor_chip.y) }
 
   bos () { return this.move_to(1, 1) }
 
@@ -105,17 +102,17 @@ export default class Text extends Chip {
 
   bs () { return this.left().put_char(' ').left() }
 
-  cr () { return this.move_to(1, this._cursor_chip.y + 1) }
+  cr () { return this.move_to(1, this.cursor_chip.y + 1) }
 
-  lf () { return this.move_to(this._cursor_chip.x, this._cursor_chip.y + 1) }
+  lf () { return this.move_to(this.cursor_chip.x, this.cursor_chip.y + 1) }
 
-  up () { return this.move_to(this._cursor_chip.x, this._cursor_chip.y - 1) }
+  up () { return this.move_to(this.cursor_chip.x, this.cursor_chip.y - 1) }
 
-  left () { return this.move_to(this._cursor_chip.x - 1, this._cursor_chip.y) }
+  left () { return this.move_to(this.cursor_chip.x - 1, this.cursor_chip.y) }
 
-  down () { return this.move_to(this._cursor_chip.x, this._cursor_chip.y + 1) }
+  down () { return this.move_to(this.cursor_chip.x, this.cursor_chip.y + 1) }
 
-  right () { return this.move_to(this._cursor_chip.x + 1, this._cursor_chip.y) }
+  right () { return this.move_to(this.cursor_chip.x + 1, this.cursor_chip.y) }
 
   clear_eol (bg = 0) {
     let { x, y } = this.pos()

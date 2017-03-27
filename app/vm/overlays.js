@@ -163,7 +163,7 @@ export class NoisesOverlay extends Overlay {
       }
       noise.context.putImageData(data, 0, 0)
       this.noises[c] = noise
-      this.video.stage.addChild(noise.sprite)
+      this.video._main.stage.addChild(noise.sprite)
     }
 
     this.noiseKeys = _.keys(this.noises)
@@ -245,7 +245,9 @@ export class Overlays {
   constructor (main, options = {}) {
     this._main = main
 
-    let renderer = this._main.renderer
+    let stage = main.stage
+    let renderer = main.renderer
+
     let width = renderer.width
     let height = renderer.height
     let scale = this.scale
@@ -257,22 +259,22 @@ export class Overlays {
     if (_.get(options, 'screen')) {
       this._list.screen = new ScreenOverlay(this, this._width, this._height, _.get(options, 'screen'))
       this._list.screen.sprite.scale = new PIXI.Point(scale, scale)
-      this.stage.addChild(this._list.screen.sprite)
+      stage.addChild(this._list.screen.sprite)
     }
 
     if (_.get(options, 'scanlines')) {
       this._list.scanlines = new ScanlinesOverlay(this, width, height, _.get(options, 'scanlines'))
-      this.stage.addChild(this._list.scanlines.sprite)
+      stage.addChild(this._list.scanlines.sprite)
     }
 
     if (_.get(options, 'scanline')) {
       this._list.scanline = new ScanlineOverlay(this, width, height, _.get(options, 'scanline'))
-      this.stage.addChild(this._list.scanline.sprite)
+      stage.addChild(this._list.scanline.sprite)
     }
 
     if (_.get(options, 'rgb')) {
       this._list.rgb = new RgbOverlay(this, width, height, _.get(options, 'rgb'))
-      this.stage.addChild(this._list.rgb.sprite)
+      stage.addChild(this._list.rgb.sprite)
     }
 
     if (_.get(options, 'noises')) {
@@ -281,37 +283,46 @@ export class Overlays {
 
     if (_.get(options, 'crt')) {
       this._list.crt = new CrtOverlay(this, width, height, _.get(options, 'crt'))
-      this.stage.addChild(this._list.crt.sprite)
+      stage.addChild(this._list.crt.sprite)
     }
 
     if (_.get(options, 'monitor')) {
-      let tex = PIXI.Texture.fromImage('./build/' + require('file?name=assets/[path]/[name].[ext]!../../../assets/imgs/crt.png'))
+      let tex = PIXI.Texture.fromImage('./build/' + require('file?name=assets/[path]/[name].[ext]!../../assets/imgs/crt.png'))
       this._list.monitor = new PIXI.Sprite(tex)
       this._list.monitor.width = width + margins_x
       this._list.monitor.height = height + margins_y
       this._list.monitor.x = margins_x / -2
       this._list.monitor.y = margins_y / -2
-      this.stage.addChild(this._list.monitor)
+      stage.addChild(this._list.monitor)
     }
   }
 
   tick (delay) {
     for (let k in this._list) {
-      this._list[k].tick(delay)
+      if (this._list[k].tick) {
+        this._list[k].tick(delay)
+      }
     }
   }
 
   reset () {
     for (let k in this._list) {
-      this._list[k].reset()
+      if (this._list[k].reset) {
+        this._list[k].reset()
+      }
     }
   }
 
   destroy () {
     for (let k in this._list) {
-      let o = this._list[k].canvas
-      o.destroy()
+      if (this._list[k].destroy) {
+        this._list[k].destroy()
+      }
     }
+  }
+
+  resize () {
+
   }
 
 }

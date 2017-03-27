@@ -1,5 +1,5 @@
 import hexy from 'hexy'
-import { hex } from '../../globals.js'
+import { hex } from '../globals.js'
 
 export const data_type_sizes = {
   i8: 1,
