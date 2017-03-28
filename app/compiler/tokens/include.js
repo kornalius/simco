@@ -1,5 +1,5 @@
-import { Lexer } from '../../lexer.js'
-import { path, dirs, fs } from '../../../utils.js'
+import { Lexer } from '../lexer.js'
+import { path, dirs, fs } from '../../utils.js'
 
 export default Mixin(superclass => class IncludeToken extends superclass {
 

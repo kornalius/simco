@@ -3,7 +3,7 @@ import _ from 'lodash'
 import { error } from '../globals.js'
 import { Frames } from './frame.js'
 
-import KeyLiteral from './grammar/key_literal.js'
+import KeyLiteral from './grammar/expressions/key_literal.js'
 
 import Statements from './grammar/statements/statements.js'
 import IdStatements from './grammar/statements/id.js'
@@ -21,7 +21,7 @@ import FnExpressions from './grammar/expressions/fn.js'
 import IdExpressions from './grammar/expressions/id.js'
 import ClassExpressions from './grammar/expressions/class.js'
 
-export class Node {
+class Node {
 
   constructor (parser, token, data) {
     this.parser = parser
@@ -52,7 +52,7 @@ export class Node {
 
 class EmptyClass {}
 
-export class Parser extends mix(EmptyClass).with(
+export default class Parser extends mix(EmptyClass).with(
   KeyLiteral,
 
   Statements,
@@ -72,14 +72,12 @@ export class Parser extends mix(EmptyClass).with(
   ClassExpressions
 ) {
 
-  constructor (lexer) {
-    super ()
-    this.lexer = lexer
-    this.lexer.parser = this
+  constructor () {
+    super()
     this.reset()
   }
 
-  reset () {
+  reset (tokens) {
     this.errors = 0
     this.offset = 0
     this.nodes = []
@@ -87,6 +85,7 @@ export class Parser extends mix(EmptyClass).with(
     this.prev_frame = null
     this.in_class = false
     this.fn_level = 0
+    this.tokens = tokens || []
   }
 
   validOffset (offset) { return offset >= 0 && offset < this.length }
@@ -96,8 +95,6 @@ export class Parser extends mix(EmptyClass).with(
   get eos () { return this.offset >= this.length }
 
   get length () { return this.tokens.length }
-
-  get tokens () { return this.lexer.tokens }
 
   get token () { return this.token_at(this.offset) }
 
@@ -159,8 +156,8 @@ export class Parser extends mix(EmptyClass).with(
     return node
   }
 
-  run () {
-    this.reset()
+  run (tokens) {
+    this.reset(tokens)
     this.frames.start('globals')
     let nodes = this.statements()
     this.frames.end()

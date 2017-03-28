@@ -5,7 +5,7 @@ import group_tokens from './groups.js'
 import literal_tokens from './literals.js'
 import operator_tokens from './operators.js'
 import primitive_tokens from './primitives.js'
-import reserved_tokens from './reserveds.js'
+import reserved_tokens from './reserved.js'
 
 export default Mixin(superclass => class TokenTypes extends superclass {
 

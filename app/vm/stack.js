@@ -3,36 +3,56 @@ import { data_type_size } from './memory.js'
 
 class StackEntry {
 
-  constructor (stack, addr, max = 255, type = defaults.type, size = 8, rolling = false) {
+  constructor (stack, offset = 0, max = 255, type = defaults.type, size, rolling = false) {
     this._stack = stack
 
-    size = size || data_type_size(type)
+    this._max = max
+    this._size = size || data_type_size(type)
+    this._top = offset
+    this._bottom = this._top + this._size - 1
+    this._type = type
+    this._rolling = rolling || false
 
-    this._stack._list[this.top] = this
+    this.list[this._top] = this
   }
 
   reset () {
-    this.ptr = this.top
+    this._ptr = this._top
   }
 
   destroy () {
-    this._stack._list[this.top] = undefined
+    this.list[this._top] = undefined
   }
 
+  get main () { return this._stack.main }
+  get stack () { return this._stack }
+  get list () { return this._stack.list }
+
+  get top () { return this._top }
+  get bottom () { return this._bottom }
+  get size () { return this._size }
+
+  get max () { return this._max }
+  get ptr () { return this._ptr }
+
+  get total_size () { return this._max * this._size }
+  get used () { return Math.trunc((this._ptr - this._top) / this._size) }
+  get avail () { return this.total_size - this.used }
+
   push (...value) {
-    let sz = this.size
-    let t = this.type
-    let top = this.top
-    let bottom = this.bottom
-    let rolling = this.rolling
+    let sz = this._size
+    let t = this._type
+    let top = this._top
+    let bottom = this._bottom
+    let rolling = this._rolling
     for (let v of value) {
-      if (rolling && this.ptr >= bottom) {
-        this.copy(top + sz, top, this.bottom - sz)
-        this.ptr -= sz
+      if (rolling && this._ptr >= bottom) {
+        this.copy(top + sz, top, bottom - sz)
+        this._ptr -= sz
       }
-      if (this.ptr + sz < bottom) {
-        this.write(v, this.ptr, t)
-        this.ptr += sz
+      if (this._ptr + sz < bottom) {
+        this.write(v, this._ptr, t)
+        this._ptr += sz
       }
       else {
         runtime_error(0x03)
@@ -42,17 +62,15 @@ class StackEntry {
   }
 
   pop () {
-    if (this.ptr > this.top) {
-      this.ptr -= this.size
-      return this.read(this.ptr, this.type)
+    if (this._ptr > this._top) {
+      this._ptr -= this._size
+      return this.read(this._ptr, this._type)
     }
     else {
       runtime_error(0x02)
       return 0
     }
   }
-
-  get used () { return Math.trunc((this.ptr - this.top) / this.size) }
 
 }
 
@@ -73,11 +91,12 @@ export default class Stack {
     this._list = {}
   }
 
-  new (addr, max, type, size, rolling) {
-    let s = this._list[addr]
+  get list () { return this._list }
+
+  new (offset, max, type, size, rolling) {
+    let s = this._list[offset]
     if (!s) {
-      s = new StackEntry(this, ...arguments)
-      return s
+      return new StackEntry(this, ...arguments)
     }
     else {
       runtime_error(0x04)
@@ -85,8 +104,8 @@ export default class Stack {
     }
   }
 
-  push (addr, ...values) {
-    let s = this._list[addr]
+  push (offset, ...values) {
+    let s = this._list[offset]
     if (s) {
       return s.push(...values)
     }
@@ -96,8 +115,8 @@ export default class Stack {
     }
   }
 
-  pop (addr) {
-    let s = this._list[addr]
+  pop (offset) {
+    let s = this._list[offset]
     if (s) {
       return s.pop()
     }
@@ -107,8 +126,8 @@ export default class Stack {
     }
   }
 
-  used (addr) {
-    let s = this._list[addr]
+  used (offset) {
+    let s = this._list[offset]
     if (s) {
       return s.used
     }
@@ -118,8 +137,8 @@ export default class Stack {
     }
   }
 
-  max (addr) {
-    let s = this._list[addr]
+  max (offset) {
+    let s = this._list[offset]
     if (s) {
       return s.max
     }
@@ -129,8 +148,8 @@ export default class Stack {
     }
   }
 
-  size (addr) {
-    let s = this._list[addr]
+  size (offset) {
+    let s = this._list[offset]
     if (s) {
       return s.size
     }
@@ -140,8 +159,8 @@ export default class Stack {
     }
   }
 
-  type (addr) {
-    let s = this._list[addr]
+  type (offset) {
+    let s = this._list[offset]
     if (s) {
       return s.type
     }

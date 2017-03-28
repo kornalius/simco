@@ -2,7 +2,7 @@ import 'pixi.js'
 import 'web-audio-daw'
 
 import { async } from './utils.js'
-import { defaults } from './globals.js'
+import { defaults, runtime_error } from './globals.js'
 
 // import css from '../style/main.css'
 // import t from '../html/main.html'
@@ -12,6 +12,10 @@ import { defaults } from './globals.js'
 // document.body.appendChild(el)
 
 import { Emitter } from './emitter.js'
+
+import Lexer from './compiler/lexer.js'
+import Parser from './compiler/parser.js'
+import Transpiler from './compiler/transpiler.js'
 
 import { Memory } from './vm/memory.js'
 import MemoryManager from './vm/memorymanager.js'
@@ -46,6 +50,30 @@ export class Main extends Emitter {
 
     this.reset()
 
+    this._updates = {
+      queue: [],
+
+      add: options => {
+        let o = _.get(options, 'object')
+        if (o && !o.__inUpdates) {
+          o.__inUpdates = true
+          this._updates.queue.push(options)
+        }
+      },
+
+      remove: o => {
+        this._updates.queue = _.reject(this._updates.queue, { object: o })
+        o.__inUpdates = false
+      },
+    }
+
+    // Check for littleEndian
+    let b = new ArrayBuffer(4)
+    let a = new Uint32Array(b)
+    let c = new Uint8Array(b)
+    a[0] = 0xdeadbeef
+    this.LE = c[0] === 0xef
+
     this._memory = new Memory(this)
     this._memoryManager = new MemoryManager(this)
     this._stack = new Stack(this)
@@ -59,14 +87,14 @@ export class Main extends Emitter {
     window.addEventListener('resize', this._onResize)
 
     let that = this
-    PIXI.ticker.shared.add(time => {
+    PIXI.ticker.shared.add(t => {
       if (that.status === _RUNNING) {
-        that.tick(time)
+        that.tick(t)
 
         let render = false
 
         for (let q of that._updates.queue) {
-          q.object.__addedToUpdates = false
+          q.object.__inUpdates = false
           if (q.render) {
             render = true
           }
@@ -98,30 +126,11 @@ export class Main extends Emitter {
 
   reset () {
     this._status = 0
-
-    this._updates = {
-      queue: [],
-
-      add: options => {
-        let o = _.get(options, 'object')
-        if (o && !o.__addedToUpdates) {
-          o.__addedToUpdates = true
-          this._updates.queue.push(options)
-        }
-      },
-
-      remove: o => {
-        this._updates.queue = _.reject(this._updates.queue, { object: o })
-        o.__addedToUpdates = false
-      },
+    this._program = {
+      path: undefined,
+      code: undefined,
+      fn: undefined,
     }
-
-    // Check for littleEndian
-    let b = new ArrayBuffer(4)
-    let a = new Uint32Array(b)
-    let c = new Uint8Array(b)
-    a[0] = 0xdeadbeef
-    this.LE = c[0] === 0xef
   }
 
   default (name) { return _.get(defaults, name) }
@@ -146,9 +155,45 @@ export class Main extends Emitter {
   get stage () { return this._guideo._stage }
   get renderer () { return this._guideo._renderer }
 
+  get program () { return this._program }
+
   onResize () {
     this._guideo.emit('resize')
     return this
+  }
+
+  hlt (code) {
+    if (code > 0) {
+      runtime_error(code)
+    }
+    this.stop()
+  }
+
+  load (path) {
+    let t = new Lexer()
+    let tokens = t.run(path)
+    console.log(tokens)
+
+    let p = new Parser()
+    let nodes = p.run(tokens)
+    console.log(nodes)
+
+    if (p.errors === 0) {
+      let t = new Transpiler()
+      let code = t.run(nodes)
+      console.log(code)
+
+      if (t.errors === 0) {
+        this._program.code = code
+        this._program.path = path
+        this._program.fn = new Function(['args'], this._program.code)
+      }
+    }
+  }
+
+  run (...args) {
+    let fn = _.get(this, '_program.fn')
+    return fn ? fn.apply(this, args) : null
   }
 
   start () {

@@ -5,7 +5,7 @@ import TokenTypes from './tokens/types.js'
 import ConstToken from './tokens/const.js'
 import IncludeToken from './tokens/include.js'
 
-export class Token {
+class Token {
 
   constructor (lexer, type, value, start, end) {
     if (lexer instanceof Token) {
@@ -75,15 +75,15 @@ export class Token {
 
 class EmptyClass {}
 
-export class Lexer extends mix(EmptyClass).with(
+export default class Lexer extends mix(EmptyClass).with(
   TokenTypes,
   ConstToken,
   IncludeToken
 ) {
 
-  constructor (path, text) {
+  constructor () {
     super()
-    this.reset(path, text)
+    this.reset()
   }
 
   reset (path, text) {

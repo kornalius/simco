@@ -16,7 +16,7 @@ import AssignTemplates from './templates/assign.js'
 
 class EmptyClass {}
 
-export class Transpiler extends mix(EmptyClass).with(
+export default class Transpiler extends mix(EmptyClass).with(
   Templates,
   CodeTemplates,
 
@@ -37,9 +37,9 @@ export class Transpiler extends mix(EmptyClass).with(
   AssignTemplates
 ) {
 
-  constructor (nodes) {
+  constructor () {
     super()
-    this.reset(nodes || [])
+    this.reset()
   }
 
   get length () { return this.lines.length }
@@ -66,7 +66,7 @@ export class Transpiler extends mix(EmptyClass).with(
 
   reset (nodes) {
     this.errors = 0
-    this.nodes = nodes
+    this.nodes = nodes || []
     this.lines = []
     this.line = ''
     this.offset = 0

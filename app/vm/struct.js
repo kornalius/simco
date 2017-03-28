@@ -1,34 +1,40 @@
 import { data_type_size } from './memory.js'
 
 
-export class Struct {
+export default class Struct {
 
-  constructor (offset, format) {
+  constructor (main, offset, format) {
+    this._main = main
+
     if (_.isObject(offset)) {
       format = offset
-      offset = null
+      offset = undefined
     }
 
     this.format = format
     let sz = this.format_size(format)
-    offset = offset || _vm.alloc(sz)
+    this._top = offset || this.memoryManager.alloc(sz)
+    this._bottom = this._top + sz - 1
 
-    this.mem_init(offset, sz)
-
-    this.assign_properties(offset)
+    this.assign_properties(this._top)
 
     return this
   }
 
   reset () {
-    this.mem_reset()
-    this.fill(0, this.mem_top, this.mem_size)
+    this.fill(0, this._top, this.size())
   }
 
   destroy () {
-    _vm.free(this.mem_top)
-    this.mem_shut()
+    this.memoryManager.free(this._top)
   }
+
+  get main () { return this._main }
+  get memory () { return this._main.memory }
+  get memoryManager () { return this._main.memoryManager }
+
+  get top () { return this._top }
+  get bottom () { return this._bottom }
 
   format_by_name (name) { return _.find(this.format, { name }) }
 
@@ -43,22 +49,22 @@ export class Struct {
 
       if (_.isObject(type)) {
         this[n] = new Struct(offset, type)
-        size = this[n].mem_bottom - this[n].mem_top
+        size = this[n].bottom - this[n].top
       }
       else {
         size = this.size(type)
         if (!_.isNumber(type) && ['i16', 's16', 'i32', 's32', 'f32'].indexOf(type) !== -1) {
           while (offset % 2 !== 0) { offset++ }
         }
-        this[n] = { name, type, mem_size: size, mem_top: offset, mem_bottom: offset + size - 1 }
+        this[n] = { name, type, size, top: offset, bottom: offset + size - 1 }
       }
 
       let entry = this[n]
 
       Object.defineProperty(this, name, {
         enumerable: true,
-        get: () => this.read(entry.mem_top, entry.type),
-        set: value => { this.write(value, entry.mem_top, entry.type) },
+        get: () => this.read(entry.top, entry.type),
+        set: value => { this.write(value, entry.top, entry.type) },
       })
 
       if (value) {
@@ -88,7 +94,7 @@ export class Struct {
 
   size (type) {
     if (!type) {
-      return this.mem_bottom - this.mem_top
+      return this._bottom - this._top
     }
     else if (type instanceof Struct) {
       return type.size()
@@ -99,7 +105,7 @@ export class Struct {
   }
 
   from_buffer (buf, offset = 0) {
-    this.mem_array.set(buf, offset)
+    this.memory.data.set(buf, offset)
     return this
   }
 
@@ -107,7 +113,7 @@ export class Struct {
     if (!buf) {
       buf = new ArrayBuffer(this.size())
     }
-    buf.set(this.mem_array, offset)
+    buf.set(this.memory.data, offset)
     return buf
   }
 
