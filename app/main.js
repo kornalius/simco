@@ -15,10 +15,11 @@ import { Emitter } from './emitter.js'
 
 import { Memory } from './vm/memory.js'
 import MemoryManager from './vm/memorymanager.js'
+import Stack from './vm/stack.js'
 import Interrupt from './vm/interrupt.js'
-import Video from './vm/chips/video.js'
-import Keyboard from './vm/chips/keyboard.js'
-import Mouse from './vm/chips/mouse.js'
+import Guideo from './vm/chips/guideo.js'
+import Ken from './vm/chips/ken.js'
+import Mickey from './vm/chips/mickey.js'
 
 // import { VM } from './interpreter/vm.js'
 
@@ -47,11 +48,12 @@ export class Main extends Emitter {
 
     this._memory = new Memory(this)
     this._memoryManager = new MemoryManager(this)
+    this._stack = new Stack(this)
     this._interrupts = new Interrupt(this)
 
-    this._video_chip = new Video(this)
-    this._keyboard_chip = new Keyboard(this)
-    this._mouse_chip = new Mouse(this)
+    this._guideo = new Guideo(this)
+    this._ken = new Ken(this)
+    this._mickey = new Mickey(this)
 
     this._onResize = this.onResize.bind(this)
     window.addEventListener('resize', this._onResize)
@@ -76,7 +78,7 @@ export class Main extends Emitter {
         that._updates.queue = []
 
         if (render) {
-          that._video_chip.renderer.render(that._video_chip.stage)
+          that._guideo.renderer.render(that._guideo.stage)
         }
       }
     })
@@ -85,9 +87,9 @@ export class Main extends Emitter {
   }
 
   destroy () {
-    this._video_chip.destroy()
-    this._keyboard_chip.destroy()
-    this._mouse_chip.destroy()
+    this._guideo.destroy()
+    this._ken.destroy()
+    this._mickey.destroy()
     this._interrupts.destroy()
     this._memoryManager.destroy()
     this._memory.destroy()
@@ -137,15 +139,15 @@ export class Main extends Emitter {
 
   get updates () { return this._updates }
 
-  get video_chip () { return this._video_chip }
-  get keyboard_chip () { return this._keyboard_chip }
-  get mouse_chip () { return this._mouse_chip }
+  get guideo () { return this._guideo }
+  get keyboard_chip () { return this._ken }
+  get mickey () { return this._mickey }
 
-  get stage () { return this._video_chip._stage }
-  get renderer () { return this._video_chip._renderer }
+  get stage () { return this._guideo._stage }
+  get renderer () { return this._guideo._renderer }
 
   onResize () {
-    this._video_chip.emit('resize')
+    this._guideo.emit('resize')
     return this
   }
 
@@ -173,10 +175,10 @@ export class Main extends Emitter {
   tick (time) {
     this._memory.tick(time)
     this._memoryManager.tick(time)
-    this._keyboard_chip.tick(time)
-    this._mouse_chip.tick(time)
+    this._ken.tick(time)
+    this._mickey.tick(time)
     this._interrupts.tick(time)
-    this._video_chip.tick(time)
+    this._guideo.tick(time)
   }
 
   test () {

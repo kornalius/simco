@@ -1,13 +1,13 @@
 import Chip from './chip.js'
 
-export default class Sprite extends Chip {
+export default class Violet extends Chip {
 
   constructor (main) {
     super(main)
 
     this._list = []
 
-    this.init('i8', 'sprite', ['count', 'width', 'height'])
+    this.init('i8', 'violet', ['count', 'width', 'height'])
 
     this.reset()
   }
@@ -68,14 +68,14 @@ export default class Sprite extends Chip {
     let sl = this._list
     let ss = this._size
     let data = this._data
-    let video = this.video_chip
+    let guideo = this.guideo
 
     for (let s of _.sortBy(sl, 'z')) {
       let ptr = sl + s.frame * ss
       for (let by = 0; by < sh; by++) {
         let pi = (s.y + by) * sw + s.x
         for (let bx = 0; bx < sw; bx++) {
-          video.pixel(pi++, data[ptr++])
+          guideo.pixel(pi++, data[ptr++])
         }
       }
     }

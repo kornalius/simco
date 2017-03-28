@@ -136,19 +136,19 @@ export class VM {
 
   resume () { this.status = _VM_RUNNING }
 
-  tick (delta) {
+  tick (t) {
     if (this.status === _VM_RUNNING) {
       let t = performance.now()
 
-      this.int_tick(t, delta)
-      this.mem_tick(t, delta)
+      this.int_tick(t, t)
+      this.mem_tick(t, t)
 
       for (let k in this.ports) {
-        this.ports[k].tick(t, delta)
+        this.ports[k].tick(t, t)
       }
 
-      this.mm_tick(t, delta)
-      this.dbg_tick(t, delta)
+      this.mm_tick(t, t)
+      this.dbg_tick(t, t)
     }
   }
 

@@ -1,11 +1,11 @@
 import Chip from './chip.js'
 
-export default class Keyboard extends Chip {
+export default class Ken extends Chip {
 
   constructor (main) {
     super(main)
 
-    this.init('i32', 'keyboard', ['count'])
+    this.init('i32', 'ken', ['count'])
 
     this._onKeydown = this.onKeydown.bind(this)
     this._onKeyup = this.onKeyup.bind(this)

@@ -1,11 +1,11 @@
 import Chip from './chip.js'
 
-export default class Mouse extends Chip {
+export default class Mickey extends Chip {
 
   constructor (main) {
     super(main)
 
-    this.init('i32', 'mouse', ['count', 'dblClickDelay', 'dblClickDistance'])
+    this.init('i32', 'mickey', ['count', 'dblClickDelay', 'dblClickDistance'])
 
     let stage = main.stage
     if (stage) {

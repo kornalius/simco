@@ -1,11 +1,11 @@
 import Chip from './chip.js'
 
-export default class Palette extends Chip {
+export default class Rainbow extends Chip {
 
   constructor (main) {
     super(main)
 
-    this.init('i32', 'palette', ['count'])
+    this.init('i32', 'rainbow', ['count'])
 
     this.reset()
   }

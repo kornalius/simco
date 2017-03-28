@@ -7,13 +7,22 @@ export default class MemoryManager {
 
   constructor (main) {
     this._main = main
-    this._blocks = []
-    this._last = 0
+
     this._collect_delay = main.default('memory_manager.collect_delay')
+
+    this.reset()
   }
 
   reset () {
+    this._blocks = []
+    this._last = 0
     return this.collect()
+  }
+
+  destroy () {
+    this.collect()
+    this._blocks = []
+    this._last = 0
   }
 
   tick (t) {
@@ -23,13 +32,8 @@ export default class MemoryManager {
     }
   }
 
-  destroy () {
-    this.collect()
-    this._blocks = []
-    this._last = 0
-  }
-
   get main () { return this._main }
+  get memory () { return this._main.memory }
 
   get blocks () { return this._blocks }
   get last () { return this._last }

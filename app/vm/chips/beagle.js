@@ -1,12 +1,11 @@
 import Chip from './chip.js'
 
-export default class Cursor extends Chip {
+export default class Beagle extends Chip {
 
   constructor (main) {
     super(main)
 
-    this._width = this.font_chip.width
-    this._height = this.font_chip.height
+    this.init(2, 'beagle', ['width', 'height', 'color', 'blinkrate'])
 
     this.reset()
   }
@@ -15,8 +14,16 @@ export default class Cursor extends Chip {
     super.reset()
     this._x = 0
     this._y = 0
-    this._color = this.palette_chip.white
+    this._last = 0
+    this._blink_hidden = false
     return this
+  }
+
+  tick (t) {
+    if (t - this._last >= this._blinkrate) {
+      this.blink()
+      this._last = t
+    }
   }
 
   get x () { return this._x }
@@ -28,9 +35,17 @@ export default class Cursor extends Chip {
   get color () { return this._color }
   set color (value) { this._color = value }
 
+  get blinkrate () { return this._blinkrate }
+  set blinkrate (value) { this._blinkrate = value }
+
+  blink () {
+    this._blink_hidden = !this._blink_hidden
+    return this.update()
+  }
+
   move_to (x, y) {
-    let w = this.text_chip.width
-    let h = this.text_chip.height
+    let w = this.orwell.width
+    let h = this.orwell.height
 
     if (x > w) {
       x = w
@@ -58,12 +73,12 @@ export default class Cursor extends Chip {
     let w = this._width
     let h = this._height
     let c = this._color
-    let video = this.video_chip
+    let guideo = this.guideo
 
     for (let by = 0; by < h; by++) {
       let pi = (y + by) * w + x
       for (let bx = 0; bx < w; bx++) {
-        video.pixel(pi++, c)
+        guideo.pixel(pi++, c)
       }
     }
 

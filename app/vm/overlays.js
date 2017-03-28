@@ -3,8 +3,8 @@ import _ from 'lodash'
 
 export class Overlay {
 
-  constructor (video, width, height) {
-    this.video = video
+  constructor (guideo, width, height) {
+    this.guideo = guideo
     this.width = width
     this.height = height
     this.last = 0
@@ -35,7 +35,7 @@ export class Overlay {
   }
 
   update () {
-    this.video.force_update = true
+    this.guideo.force_update = true
   }
 
 }
@@ -43,13 +43,13 @@ export class Overlay {
 
 export class ScreenOverlay extends Overlay {
 
-  constructor (video, width, height, options) {
-    super(video, width, height)
+  constructor (guideo, width, height, options) {
+    super(guideo, width, height)
 
     this.create()
 
-    this.sprite.x = this.video.offset_x + this.video.margins_x / 2
-    this.sprite.y = this.video.offset_y + this.video.margins_y / 2
+    this.sprite.x = this.guideo.offset_x + this.guideo.margins_x / 2
+    this.sprite.y = this.guideo.offset_y + this.guideo.margins_y / 2
   }
 
 }
@@ -57,8 +57,8 @@ export class ScreenOverlay extends Overlay {
 
 export class ScanlinesOverlay extends Overlay {
 
-  constructor (video, width, height, options) {
-    super(video, width, height)
+  constructor (guideo, width, height, options) {
+    super(guideo, width, height)
 
     this.gap = _.get(options, 'gap', 3)
     this.alpha = _.get(options, 'alpha', 0.35)
@@ -84,8 +84,8 @@ export class ScanlinesOverlay extends Overlay {
 
 export class ScanlineOverlay extends Overlay {
 
-  constructor (video, width, height, options) {
-    super(video, width, height)
+  constructor (guideo, width, height, options) {
+    super(guideo, width, height)
 
     this.refresh = _.get(options, 'refresh', 50)
     this.speed = _.get(options, 'speed', 16)
@@ -130,8 +130,8 @@ export class ScanlineOverlay extends Overlay {
 
 export class NoisesOverlay extends Overlay {
 
-  constructor (video, width, height, options) {
-    super(video, width, height)
+  constructor (guideo, width, height, options) {
+    super(guideo, width, height)
 
     this.refresh = _.get(options, 'refresh', 250)
     this.count = _.get(options, 'count', 8)
@@ -145,7 +145,7 @@ export class NoisesOverlay extends Overlay {
 
     let a = this.alpha * 255
     for (let c = 0; c < this.count; c++) {
-      let noise = new Overlay(this.video, this.width, this.height)
+      let noise = new Overlay(this.guideo, this.width, this.height)
       noise.create()
       noise.sprite.visible = c === 0
 
@@ -163,7 +163,7 @@ export class NoisesOverlay extends Overlay {
       }
       noise.context.putImageData(data, 0, 0)
       this.noises[c] = noise
-      this.video._main.stage.addChild(noise.sprite)
+      this.guideo._main.stage.addChild(noise.sprite)
     }
 
     this.noiseKeys = _.keys(this.noises)
@@ -197,8 +197,8 @@ export class NoisesOverlay extends Overlay {
 
 export class RgbOverlay extends Overlay {
 
-  constructor (video, width, height, options) {
-    super(video, width, height)
+  constructor (guideo, width, height, options) {
+    super(guideo, width, height)
 
     this.alpha = _.get(options, 'alpha', 0.075)
 
@@ -219,8 +219,8 @@ export class RgbOverlay extends Overlay {
 
 export class CrtOverlay extends Overlay {
 
-  constructor (video, width, height, options) {
-    super(video, width, height)
+  constructor (guideo, width, height, options) {
+    super(guideo, width, height)
 
     this.radius = _.get(options, 'radius', 0.25)
     this.inside_alpha = _.get(options, 'inside_alpha', 0.2)

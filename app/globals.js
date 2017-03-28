@@ -23,38 +23,45 @@ const defaults = {
     collect_delay: 30 * 1000,
   },
 
-  video: {
+  guideo: {
     width: 320,
     height: 240,
     scale: 4,
   },
 
-  palette: {
+  rainbow: {
     count: 16,
   },
 
-  font: {
+  fonzo: {
     count: 255,
     width: 4,
     height: 6,
   },
 
-  text: {
+  orwell: {
     width: 320 / 4,
     height: 240 / 6,
   },
 
-  sprite: {
+  beagle: {
+    width: 4,
+    height: 6,
+    color: 15,
+    blinkrate: 500,
+  },
+
+  violet: {
     count: 32,
     width: 16,
     height: 16,
   },
 
-  keyboard: {
+  ken: {
     count: 255,
   },
 
-  mouse: {
+  mickey: {
     count: 255,
     dblClickDelay: 250,
     dblClickDistance: 8,
@@ -64,7 +71,7 @@ const defaults = {
     size: 32 * 1024,
   },
 
-  sound: {
+  alto: {
     size: 4 * 1024,
   },
 }

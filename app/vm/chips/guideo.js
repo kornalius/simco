@@ -1,23 +1,23 @@
-import Palette from './palette.js'
-import Font from './font.js'
-import Text from './text.js'
-import Cursor from './cursor.js'
-import Sprite from './sprite.js'
+import Rainbow from './rainbow.js'
+import Fonzo from './fonzo.js'
+import Orwell from './orwell.js'
+import Beagle from './beagle.js'
+import Violet from './violet.js'
 import { Overlays } from '../overlays.js'
 
 import Chip from './chip.js'
 
-export default class Video extends Chip {
+export default class Guideo extends Chip {
 
   constructor (main) {
     super(main)
 
-    this.init('i8', 'video', ['width', 'height', 'scale'])
+    this.init('i8', 'guideo', ['width', 'height', 'scale'])
 
     this._renderer = new PIXI.autoDetectRenderer(this._width * this._scale, this._height * this._scale, {})
     this._renderer.view.style.position = 'absolute'
     this._renderer.view.style.cursor = 'none'
-    this._renderer.view.id = 'video'
+    this._renderer.view.id = 'guideo'
     document.body.appendChild(this._renderer.view)
 
     this._stage = new PIXI.Container()
@@ -27,11 +27,11 @@ export default class Video extends Chip {
     this.on('resize', this._onResize)
 
     this.async(function () {
-      this._palette_chip = new Palette(main)
-      this._font_chip = new Font(main)
-      this._text_chip = new Text(main)
-      this._cursor_chip = new Cursor(main)
-      this._sprite_chip = new Sprite(main)
+      this._rainbow = new Rainbow(main)
+      this._fonzo = new Fonzo(main)
+      this._orwell = new Orwell(main)
+      this._beagle = new Beagle(main)
+      this._violet = new Violet(main)
       this._overlays = new Overlays(this, {
         screen: {},
         scanlines: {},
@@ -48,11 +48,11 @@ export default class Video extends Chip {
   destroy () {
     this.off('resize', this._onResize)
 
-    this._palette_chip.destroy()
-    this._font_chip.destroy()
-    this._text_chip.destroy()
-    this._cursor_chip.destroy()
-    this._sprite_chip.destroy()
+    this._rainbow.destroy()
+    this._fonzo.destroy()
+    this._orwell.destroy()
+    this._beagle.destroy()
+    this._violet.destroy()
 
     this._overlays.destroy()
 
@@ -81,11 +81,11 @@ export default class Video extends Chip {
     this._force_update = false
     this._force_flip = false
 
-    this._palette_chip.reset()
-    this._font_chip.reset()
-    this._text_chip.reset()
-    this._cursor_chip.reset()
-    this._sprite_chip.reset()
+    this._rainbow.reset()
+    this._fonzo.reset()
+    this._orwell.reset()
+    this._beagle.reset()
+    this._violet.reset()
     this._overlays.reset()
 
     return this.resize()
@@ -108,11 +108,11 @@ export default class Video extends Chip {
   }
 
   get video_chip () { return this }
-  get palette_chip () { return this._palette_chip }
-  get font_chip () { return this._font_chip }
-  get text_chip () { return this._text_chip }
-  get cursor_chip () { return this._cursor_chip }
-  get sprite_chip () { return this._sprite_chip }
+  get rainbow () { return this._rainbow }
+  get fonzo () { return this._fonzo }
+  get orwell () { return this._orwell }
+  get beagle () { return this._beagle }
+  get violet () { return this._violet }
 
   get overlays () { return this._overlays }
 
@@ -129,12 +129,12 @@ export default class Video extends Chip {
   get force_flip () { return this._force_flip }
   set force_flip (value) { this._force_flip = value }
 
-  tick (delta) {
-    this._palette_chip.tick(delta)
-    this._font_chip.tick(delta)
-    this._text_chip.tick(delta)
-    this._cursor_chip.tick(delta)
-    this._sprite_chip.tick(delta)
+  tick (t) {
+    this._rainbow.tick(t)
+    this._fonzo.tick(t)
+    this._orwell.tick(t)
+    this._beagle.tick(t)
+    this._violet.tick(t)
 
     if (this._force_update) {
       this._force_update = false
@@ -146,7 +146,7 @@ export default class Video extends Chip {
       this._renderer.render(this._stage)
     }
 
-    this._overlays.tick(delta)
+    this._overlays.tick(t)
   }
 
   refresh (flip = false) {
@@ -162,7 +162,7 @@ export default class Video extends Chip {
   flip () {
     let data = this._data
     let pixels = this._pixels
-    let pal = this._palette_chip
+    let pal = this._rainbow
 
     for (let i = 0; i < this._size; i++) {
       pixels[i] = pal.data[data[i]]
@@ -240,7 +240,7 @@ export default class Video extends Chip {
   pixel (i, c) {
     let data = this._data
     if (c !== undefined && data[i] !== c) {
-      data[i] = Math.max(0, Math.min(c, this._palette_chip.count - 1))
+      data[i] = Math.max(0, Math.min(c, this._rainbow.count - 1))
     }
     return data[i]
   }

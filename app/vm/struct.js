@@ -1,50 +1,40 @@
-import { mixin } from '../globals.js'
-import { Memory, data_type_size } from './memory.js'
-
-
-export class StructEntry {
-
-  constructor (offset, format) {
-    this.struct_init(offset, format)
-  }
-
-}
+import { data_type_size } from './memory.js'
 
 
 export class Struct {
 
-  struct_init (offset, format) {
+  constructor (offset, format) {
     if (_.isObject(offset)) {
       format = offset
       offset = null
     }
 
-    this.struct_format = format
-    let sz = this.struct_format_size(format)
+    this.format = format
+    let sz = this.format_size(format)
     offset = offset || _vm.alloc(sz)
 
     this.mem_init(offset, sz)
 
-    this.struct_assign_properties(offset)
+    this.assign_properties(offset)
 
     return this
   }
 
-  struct_reset () {
+  reset () {
     this.mem_reset()
     this.fill(0, this.mem_top, this.mem_size)
   }
 
-  struct_shut () {
+  destroy () {
     _vm.free(this.mem_top)
     this.mem_shut()
   }
 
-  struct_format_by_name (name) { return _.find(this.struct_format, { name }) }
+  format_by_name (name) { return _.find(this.format, { name }) }
 
-  struct_assign_properties (offset) {
-    for (let name of this.struct_names) {
-      let f = this.struct_format_by_name(name)
+  assign_properties (offset) {
+    for (let name of this.names) {
+      let f = this.format_by_name(name)
 
       let type = f.type
       let value = f.value || 0
@@ -52,11 +42,11 @@ export class Struct {
       let n = '_' + name
 
       if (_.isObject(type)) {
-        this[n] = new StructEntry(offset, type)
+        this[n] = new Struct(offset, type)
         size = this[n].mem_bottom - this[n].mem_top
       }
       else {
-        size = this.struct_size(type)
+        size = this.size(type)
         if (!_.isNumber(type) && ['i16', 's16', 'i32', 's32', 'f32'].indexOf(type) !== -1) {
           while (offset % 2 !== 0) { offset++ }
         }
@@ -81,27 +71,27 @@ export class Struct {
     return offset
   }
 
-  struct_format_size (fmt) {
+  format_size (fmt) {
     let sz = 0
     let names = _.map(fmt, st => st.name)
 
     for (let name of names) {
-      let f = _.find(this.struct_format, { name })
+      let f = _.find(this.format, { name })
       let type = f.type
-      sz += _.isObject(type) ? this.struct_format_size(type) : data_type_size(type)
+      sz += _.isObject(type) ? this.format_size(type) : data_type_size(type)
     }
 
     return sz
   }
 
-  get struct_names () { return _.map(this.struct_format, st => st.name) }
+  get names () { return _.map(this.format, st => st.name) }
 
-  struct_size (type) {
+  size (type) {
     if (!type) {
       return this.mem_bottom - this.mem_top
     }
-    else if (type instanceof StructEntry) {
-      return type.struct_size()
+    else if (type instanceof Struct) {
+      return type.size()
     }
     else {
       return data_type_size(type)
@@ -115,15 +105,15 @@ export class Struct {
 
   to_buffer (buf, offset = 0) {
     if (!buf) {
-      buf = new ArrayBuffer(this.struct_size())
+      buf = new ArrayBuffer(this.size())
     }
     buf.set(this.mem_array, offset)
     return buf
   }
 
   from_object (obj) {
-    for (let name of this.struct_names) {
-      if (this[name] instanceof StructEntry) {
+    for (let name of this.names) {
+      if (this[name] instanceof Struct) {
         this[name].from_object(obj[name])
       }
       else {
@@ -135,9 +125,9 @@ export class Struct {
 
   to_object () {
     let s = {}
-    for (let name of this.struct_names) {
+    for (let name of this.names) {
       let value = this[name]
-      if (value instanceof StructEntry) {
+      if (value instanceof Struct) {
         s[name] = value.to_object()
       }
       else {
@@ -148,7 +138,3 @@ export class Struct {
   }
 
 }
-
-mixin(Struct.prototype, Memory.prototype)
-
-mixin(StructEntry.prototype, Struct.prototype)

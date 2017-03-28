@@ -40,12 +40,12 @@ export default class Chip extends Emitter {
   get main () { return this._main }
   get memory () { return this._main.memory }
 
-  get video_chip () { return this._main.video_chip }
-  get palette_chip () { return this.video_chip.palette_chip }
-  get font_chip () { return this.video_chip.font_chip }
-  get text_chip () { return this.video_chip.text_chip }
-  get cursor_chip () { return this.text_chip.cursor_chip }
-  get sprite_chip () { return this.video_chip.sprite_chip }
+  get guideo () { return this._main.guideo }
+  get rainbow () { return this.guideo.rainbow }
+  get fonzo () { return this.guideo.fonzo }
+  get orwell () { return this.guideo.orwell }
+  get beagle () { return this.orwell.beagle }
+  get violet () { return this.guideo.violet }
 
   get data () { return this._data }
   get top () { return this._top }
@@ -63,7 +63,7 @@ export default class Chip extends Emitter {
     return this
   }
 
-  tick (delta) {
+  tick (t) {
     if (this._force_update) {
       this.refresh()
       this._force_update = false
@@ -78,8 +78,8 @@ export default class Chip extends Emitter {
   }
 
   refresh (flip = true) {
-    this.video_chip.force_update = true
-    this.video_chip.refresh(flip)
+    this.guideo.force_update = true
+    this.guideo.refresh(flip)
     return this
   }
 
