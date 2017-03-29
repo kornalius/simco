@@ -21,7 +21,6 @@ export default class Guideo extends Chip {
     document.body.appendChild(this._renderer.view)
 
     this._stage = new PIXI.Container()
-    this._stage.scale = new PIXI.Point(this._scale, this._scale)
 
     this._onResize = this.resize.bind(this)
     this.on('resize', this._onResize)
@@ -32,7 +31,8 @@ export default class Guideo extends Chip {
       this._orwell = new Orwell(main)
       this._beagle = new Beagle(main)
       this._violet = new Violet(main)
-      this._overlays = new Overlays(this, {
+
+      this._overlays = new Overlays(main, {
         screen: {},
         scanlines: {},
         scanline: {},
@@ -41,6 +41,7 @@ export default class Guideo extends Chip {
         crt: {},
         monitor: {},
       })
+
       this.reset()
     })
   }
@@ -78,7 +79,7 @@ export default class Guideo extends Chip {
 
     this.clear()
 
-    this._force_update = false
+    this._force_redraw = false
     this._force_flip = false
 
     this._rainbow.reset()
@@ -126,6 +127,9 @@ export default class Guideo extends Chip {
   get imageData () { return this._imageData }
   get pixels () { return this._pixels }
 
+  get force_redraw () { return this._force_redraw }
+  set force_redraw (value) { this._force_redraw = value }
+
   get force_flip () { return this._force_flip }
   set force_flip (value) { this._force_flip = value }
 
@@ -135,44 +139,35 @@ export default class Guideo extends Chip {
     this._orwell.tick(t)
     this._beagle.tick(t)
     this._violet.tick(t)
+    this._overlays.tick(t)
 
-    if (this._force_update) {
-      this._force_update = false
+    if (this._force_redraw) {
+      this.redraw()
+      this._force_redraw = false
+    }
+  }
 
-      if (this._force_flip) {
-        this.flip()
+  redraw () {
+    if (this._force_flip) {
+      let data = this._data
+      let pixels = this._pixels
+      let palette = this._rainbow.data
+      let sz = this._size
+
+      for (let i = 0; i < sz; i++) {
+        pixels[i] = palette[data[i]]
       }
 
-      this._renderer.render(this._stage)
+      this._context.putImageData(this._imageData, 0, 0)
+
+      this.emit('flip')
+
+      this._force_flip = false
     }
 
-    this._overlays.tick(t)
-  }
+    this.emit('redraw')
 
-  refresh (flip = false) {
-    if (!this._force_flip) {
-      this._force_flip = flip
-    }
-
-    this.emit('refresh', { flip })
-
-    return this
-  }
-
-  flip () {
-    let data = this._data
-    let pixels = this._pixels
-    let pal = this._rainbow
-
-    for (let i = 0; i < this._size; i++) {
-      pixels[i] = pal.data[data[i]]
-    }
-
-    this._context.putImageData(this._imageData, 0, 0)
-
-    this._force_flip = false
-
-    this.emit('flip')
+    this._renderer.render(this._stage)
 
     return this
   }
@@ -180,13 +175,6 @@ export default class Guideo extends Chip {
   center () {
     this._renderer.view.style.left = window.innerWidth * 0.5 - this._renderer.width * 0.5 + 'px'
     this._renderer.view.style.top = window.innerHeight * 0.5 - this._renderer.height * 0.5 + 'px'
-    return this
-  }
-
-  rescale (width, height) {
-    if (!this.emit('rescale', { width, height }).defaultPrevented) {
-      this.scale = Math.ceil(Math.min(width / this._renderer.width, height / this._renderer.height))
-    }
     return this
   }
 
@@ -216,6 +204,7 @@ export default class Guideo extends Chip {
 
     if (!this._sprite) {
       this._sprite = new PIXI.Sprite(this._texture)
+      this._overlays.screen.sprite.addChild(this._sprite)
     }
     else {
       this._sprite.texture = this._texture
@@ -228,19 +217,27 @@ export default class Guideo extends Chip {
 
     this._pixels = new Uint32Array(this._imageData.data.buffer)
 
+    this._overlays.resize()
+
     this.center()
 
     this.test()
 
-    this._overlays.resize()
-
     return this
   }
 
-  pixel (i, c) {
-    let data = this._data
-    if (c !== undefined && data[i] !== c) {
-      data[i] = Math.max(0, Math.min(c, this._rainbow.count - 1))
+  pixel (x, y, c) {
+    let i
+    if (_.isNumber(c)) {
+      i = this.toIndex(x, y)
+    }
+    else {
+      i = x
+      c = y
+    }
+    const data = this._data
+    if (data[i] !== c) {
+      data[i] = c || 0
     }
     return data[i]
   }
@@ -270,22 +267,28 @@ export default class Guideo extends Chip {
   test () {
     this.clear()
 
-    this._stage.removeChildren()
+    this.pixel(10, 10, 13)
+    this.pixel(20, 10, 5)
+    this.pixel(30, 10, 6)
 
-    let t = new PIXI.Sprite(this.loadTexture('test.png'))
-    this._stage.addChild(t)
+    // let screen = this._overlays.screen.sprite
+    // screen.removeChildren()
 
-    let text = new PIXI.Text('This is a pixi text', { font: '20px "Glass TTY VT220"', fill: 0xFFFFFF })
-    text.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST
-    text.context.canvas.style['font-smoothing'] = 'never'
-    text.context.canvas.style['-webkit-font-smoothing'] = 'none'
-    text.context.imageSmoothingEnabled = false
-    text.context.canvas.style.display = 'hidden'
-    document.body.appendChild(text.context.canvas)
-    text.updateText()
-    this._stage.addChild(text)
-    this.update()
-    document.body.removeChild(text.context.canvas)
+    // let t = new PIXI.Sprite(this.loadTexture('test.png'))
+    // screen.addChild(t)
+
+    // let text = new PIXI.Text('This is a pixi text', { font: '20px "Glass TTY VT220"', fill: 0xFFFFFF })
+    // text.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST
+    // text.context.canvas.style['font-smoothing'] = 'never'
+    // text.context.canvas.style['-webkit-font-smoothing'] = 'none'
+    // text.context.imageSmoothingEnabled = false
+    // text.context.canvas.style.display = 'hidden'
+    // document.body.appendChild(text.context.canvas)
+    // text.updateText()
+    // screen.addChild(text)
+    // document.body.removeChild(text.context.canvas)
+
+    this.update(true)
   }
 
 }

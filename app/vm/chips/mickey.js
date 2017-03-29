@@ -89,12 +89,13 @@ export default class Mickey extends Chip {
   getEventInfo (e) {
     let renderer = this._main.renderer
 
-    let size = new PIXI.Point(renderer.width - this._sprite.width, renderer.height - this._sprite.height)
+    // let size = new PIXI.Point(renderer.width - this._sprite.width, renderer.height - this._sprite.height)
 
-    let x = Math.trunc(Math.min(size.x, Math.max(0, e.data.global.x)) / this._main.scale)
-    let y = Math.trunc(Math.min(size.y, Math.max(0, e.data.global.y)) / this._main.scale)
+    // let x = Math.trunc(Math.min(size.x, Math.max(0, e.data.global.x)) / this._main.scale)
+    // let y = Math.trunc(Math.min(size.y, Math.max(0, e.data.global.y)) / this._main.scale)
 
-    return { x, y, button: e.data.originalEvent.button }
+    // return { x, y, button: e.data.originalEvent.button }
+    return { x: 0, y: 0, button: e.data.originalEvent.button }
   }
 
   onMouseDown (e) {

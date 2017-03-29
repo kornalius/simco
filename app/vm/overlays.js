@@ -3,11 +3,13 @@ import _ from 'lodash'
 
 export class Overlay {
 
-  constructor (guideo, width, height) {
-    this.guideo = guideo
+  constructor (overlays, width, height) {
+    this._overlays = overlays
+
     this.width = width
     this.height = height
-    this.last = 0
+
+    this.reset()
   }
 
   create () {
@@ -21,10 +23,8 @@ export class Overlay {
     this.context = this.canvas.canvas.getContext('2d', { alpha: true, antialias: false })
   }
 
-  tick (t) {
-  }
-
   reset () {
+    this._last = 0
   }
 
   destroy () {
@@ -34,17 +34,25 @@ export class Overlay {
     }
   }
 
-  update () {
-    this.guideo.force_update = true
+  tick (t) {
   }
+
+  update () {
+    this.guideo.update()
+  }
+
+  get main () { return this._overlays.main }
+  get guideo () { return this.main.guideo }
+  get stage () { return this.main.stage }
+  get renderer () { return this.main.renderer }
 
 }
 
 
 export class ScreenOverlay extends Overlay {
 
-  constructor (guideo, width, height, options) {
-    super(guideo, width, height)
+  constructor (overlays, width, height, options) {
+    super(overlays, width, height)
 
     this.create()
 
@@ -57,8 +65,8 @@ export class ScreenOverlay extends Overlay {
 
 export class ScanlinesOverlay extends Overlay {
 
-  constructor (guideo, width, height, options) {
-    super(guideo, width, height)
+  constructor (overlays, width, height, options) {
+    super(overlays, width, height)
 
     this.gap = _.get(options, 'gap', 3)
     this.alpha = _.get(options, 'alpha', 0.35)
@@ -84,10 +92,10 @@ export class ScanlinesOverlay extends Overlay {
 
 export class ScanlineOverlay extends Overlay {
 
-  constructor (guideo, width, height, options) {
-    super(guideo, width, height)
+  constructor (overlays, width, height, options) {
+    super(overlays, width, height)
 
-    this.refresh = _.get(options, 'refresh', 50)
+    this.rate = _.get(options, 'rate', 50)
     this.speed = _.get(options, 'speed', 16)
     this.alpha = _.get(options, 'alpha', 0.1)
 
@@ -114,12 +122,12 @@ export class ScanlineOverlay extends Overlay {
   }
 
   tick (t) {
-    if (t - this.last >= this.refresh) {
+    if (t - this._last >= this.rate) {
       this.sprite.y += this.speed
       if (this.sprite.y > this.height) {
         this.sprite.y = -this.sprite.height
       }
-      this.last = t
+      this._last = t
 
       this.update()
     }
@@ -130,10 +138,10 @@ export class ScanlineOverlay extends Overlay {
 
 export class NoisesOverlay extends Overlay {
 
-  constructor (guideo, width, height, options) {
-    super(guideo, width, height)
+  constructor (overlays, width, height, options) {
+    super(overlays, width, height)
 
-    this.refresh = _.get(options, 'refresh', 250)
+    this.rate = _.get(options, 'rate', 250)
     this.count = _.get(options, 'count', 8)
     this.rate = _.get(options, 'rate', 0.85)
     this.red = _.get(options, 'red', 100)
@@ -171,22 +179,26 @@ export class NoisesOverlay extends Overlay {
 
   destroy () {
     super.destroy()
+
     for (let k in this.noises) {
       let noise = this.noises[k]
       noise.destroy()
     }
+
     this.noises = {}
     this.noiseKeys = []
   }
 
   tick (t) {
-    if (t - this.last >= this.refresh) {
+    if (t - this._last >= this.rate) {
       for (let k of this.noiseKeys) {
         this.noises[k].sprite.visible = false
       }
+
       let noise = this.noiseKeys[Math.trunc(Math.random() * this.noiseKeys.length)]
       this.noises[noise].sprite.visible = true
-      this.last = t
+
+      this._last = t
 
       this.update()
     }
@@ -197,8 +209,8 @@ export class NoisesOverlay extends Overlay {
 
 export class RgbOverlay extends Overlay {
 
-  constructor (guideo, width, height, options) {
-    super(guideo, width, height)
+  constructor (overlays, width, height, options) {
+    super(overlays, width, height)
 
     this.alpha = _.get(options, 'alpha', 0.075)
 
@@ -219,8 +231,8 @@ export class RgbOverlay extends Overlay {
 
 export class CrtOverlay extends Overlay {
 
-  constructor (guideo, width, height, options) {
-    super(guideo, width, height)
+  constructor (overlays, width, height, options) {
+    super(overlays, width, height)
 
     this.radius = _.get(options, 'radius', 0.25)
     this.inside_alpha = _.get(options, 'inside_alpha', 0.2)
@@ -250,76 +262,86 @@ export class Overlays {
 
     let width = renderer.width
     let height = renderer.height
-    let scale = this.scale
-    let margins_x = this.margins_x
-    let margins_y = this.margins_y
+    let scale = 1
+    let margins_x = this.margins_x || 0
+    let margins_y = this.margins_y || 0
 
     this._list = {}
+    let l = this._list
 
     if (_.get(options, 'screen')) {
-      this._list.screen = new ScreenOverlay(this, this._width, this._height, _.get(options, 'screen'))
-      this._list.screen.sprite.scale = new PIXI.Point(scale, scale)
-      stage.addChild(this._list.screen.sprite)
+      l.screen = new ScreenOverlay(this, this.guideo.width, this.guideo.height, _.get(options, 'screen'))
+      l.screen.sprite.scale = new PIXI.Point(scale, scale)
+      stage.addChild(l.screen.sprite)
     }
 
     if (_.get(options, 'scanlines')) {
-      this._list.scanlines = new ScanlinesOverlay(this, width, height, _.get(options, 'scanlines'))
-      stage.addChild(this._list.scanlines.sprite)
+      l.scanlines = new ScanlinesOverlay(this, width, height, _.get(options, 'scanlines'))
+      stage.addChild(l.scanlines.sprite)
     }
 
     if (_.get(options, 'scanline')) {
-      this._list.scanline = new ScanlineOverlay(this, width, height, _.get(options, 'scanline'))
-      stage.addChild(this._list.scanline.sprite)
+      l.scanline = new ScanlineOverlay(this, width, height, _.get(options, 'scanline'))
+      stage.addChild(l.scanline.sprite)
     }
 
     if (_.get(options, 'rgb')) {
-      this._list.rgb = new RgbOverlay(this, width, height, _.get(options, 'rgb'))
-      stage.addChild(this._list.rgb.sprite)
+      l.rgb = new RgbOverlay(this, width, height, _.get(options, 'rgb'))
+      stage.addChild(l.rgb.sprite)
     }
 
     if (_.get(options, 'noises')) {
-      this._list.noises = new NoisesOverlay(this, width, height, _.get(options, 'noises'))
+      l.noises = new NoisesOverlay(this, width, height, _.get(options, 'noises'))
     }
 
     if (_.get(options, 'crt')) {
-      this._list.crt = new CrtOverlay(this, width, height, _.get(options, 'crt'))
-      stage.addChild(this._list.crt.sprite)
+      l.crt = new CrtOverlay(this, width, height, _.get(options, 'crt'))
+      stage.addChild(l.crt.sprite)
     }
 
     if (_.get(options, 'monitor')) {
       let tex = PIXI.Texture.fromImage('./build/' + require('file?name=assets/[path]/[name].[ext]!../../assets/imgs/crt.png'))
-      this._list.monitor = new PIXI.Sprite(tex)
-      this._list.monitor.width = width + margins_x
-      this._list.monitor.height = height + margins_y
-      this._list.monitor.x = margins_x / -2
-      this._list.monitor.y = margins_y / -2
-      stage.addChild(this._list.monitor)
+      l.monitor = new PIXI.Sprite(tex)
+      l.monitor.width = width + margins_x
+      l.monitor.height = height + margins_y
+      l.monitor.x = margins_x / -2
+      l.monitor.y = margins_y / -2
+      stage.addChild(l.monitor)
     }
   }
 
-  tick (delay) {
-    for (let k in this._list) {
-      if (this._list[k].tick) {
-        this._list[k].tick(delay)
+  tick (t) {
+    const l = this._list
+    for (let k in l) {
+      if (l[k].tick) {
+        l[k].tick(t)
       }
     }
   }
 
   reset () {
-    for (let k in this._list) {
-      if (this._list[k].reset) {
-        this._list[k].reset()
+    const l = this._list
+    for (let k in l) {
+      if (l[k].reset) {
+        l[k].reset()
       }
     }
   }
 
   destroy () {
-    for (let k in this._list) {
-      if (this._list[k].destroy) {
-        this._list[k].destroy()
+    const l = this._list
+    for (let k in l) {
+      if (l[k].destroy) {
+        l[k].destroy()
       }
     }
   }
+
+  get main () { return this._main }
+  get guideo () { return this._main.guideo }
+  get stage () { return this._main.stage }
+  get renderer () { return this._main.renderer }
+  get screen () { return this._list.screen }
 
   resize () {
 

@@ -4,7 +4,7 @@ import 'web-audio-daw'
 import { async } from './utils.js'
 import { defaults, runtime_error } from './globals.js'
 
-// import css from '../style/main.css'
+import css from '../style/main.css'
 // import t from '../html/main.html'
 
 // let el = document.createElement('div')
@@ -87,17 +87,17 @@ export class Main extends Emitter {
     window.addEventListener('resize', this._onResize)
 
     let that = this
-    PIXI.ticker.shared.add(t => {
+    PIXI.ticker.shared.add(delta => {
       if (that.status === _RUNNING) {
-        that.tick(t)
+        that.tick(performance.now(), delta)
 
-        let render = false
+        // let render = false
 
         for (let q of that._updates.queue) {
           q.object.__inUpdates = false
-          if (q.render) {
-            render = true
-          }
+          // if (q.render) {
+            // render = true
+          // }
           if (q.cb) {
             q.cb(q.object, ...(q.args || []))
           }
@@ -105,9 +105,9 @@ export class Main extends Emitter {
 
         that._updates.queue = []
 
-        if (render) {
-          that._guideo.renderer.render(that._guideo.stage)
-        }
+        // if (render) {
+          // that._guideo.renderer.render(that._guideo.stage)
+        // }
       }
     })
 
@@ -217,13 +217,13 @@ export class Main extends Emitter {
     return this
   }
 
-  tick (time) {
-    this._memory.tick(time)
-    this._memoryManager.tick(time)
-    this._ken.tick(time)
-    this._mickey.tick(time)
-    this._interrupts.tick(time)
-    this._guideo.tick(time)
+  tick (t) {
+    this._memory.tick(t)
+    this._memoryManager.tick(t)
+    this._ken.tick(t)
+    this._mickey.tick(t)
+    this._interrupts.tick(t)
+    this._guideo.tick(t)
   }
 
   test () {
