@@ -8,7 +8,7 @@ export default class MemoryManager {
   constructor (main) {
     this._main = main
 
-    this._collect_delay = main.default('memory_manager.collect_delay')
+    this._collect_delay = main.defaults('memory_manager.collect_delay')
 
     this.reset()
   }

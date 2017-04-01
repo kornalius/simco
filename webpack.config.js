@@ -5,8 +5,6 @@ var externals = require('./package.json').dependencies
 var ElectronConnectWebpackPlugin = require('electron-connect-webpack-plugin')
 
 module.exports = {
-  debug: true,
-
   devtool: 'inline-source-map',
 
   target: 'electron-renderer',

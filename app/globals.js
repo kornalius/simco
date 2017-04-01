@@ -31,12 +31,13 @@ const defaults = {
 
   rainbow: {
     count: 16,
+    data_format: 'i32',
   },
 
   fonzo: {
-    count: 255,
-    width: 4,
-    height: 6,
+    count: 256,
+    width: 7,
+    height: 9,
   },
 
   orwell: {
@@ -58,21 +59,25 @@ const defaults = {
   },
 
   ken: {
-    count: 255,
+    count: 256,
   },
 
   mickey: {
-    count: 255,
+    count: 17,
+    width: 6,
+    height: 7,
+    color: 15,
+    frame: 0,
     dblClickDelay: 250,
     dblClickDistance: 8,
   },
 
   network: {
-    size: 32 * 1024,
+    count: 32 * 1024,
   },
 
   alto: {
-    size: 4 * 1024,
+    count: 4 * 1024,
   },
 }
 

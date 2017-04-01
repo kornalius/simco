@@ -5,7 +5,7 @@ export default class Ken extends Chip {
   constructor (main) {
     super(main)
 
-    this.init('i32', 'ken', ['count'])
+    this.init('ken', ['count'])
 
     this._onKeydown = this.onKeydown.bind(this)
     this._onKeyup = this.onKeyup.bind(this)

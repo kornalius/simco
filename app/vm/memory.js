@@ -27,7 +27,7 @@ export var data_type_size = type => _.isNumber(type) ? type : data_type_sizes[ty
 export class Memory {
 
   constructor (main) {
-    this._size = main.default('memory.size')
+    this._size = main.defaults('memory.size')
     this._top = 0
     this._bottom = this._top + this._size - 1
 
@@ -36,16 +36,6 @@ export class Memory {
     this._data = new Uint8Array(this._buffer)
 
     this._view = new DataView(this._buffer)
-
-    this._fns = {
-      i8: 'Uint8',
-      s8: 'Int8',
-      i16: 'Uint16',
-      s16: 'Int16',
-      i32: 'Uint32',
-      s32: 'Int32',
-      f32: 'Float32',
-    }
   }
 
   tick (t) {
@@ -82,10 +72,9 @@ export class Memory {
     return this
   }
 
-
   db (type, addr, ...args) {
     let sz = data_type_sizes[type]
-    let fn = this._view['set' + this._fns[type]]
+    let fn = this._view['set' + data_type_fns[type]]
     for (let a of args) {
       fn.call(this._view, addr, a)
       addr += sz
@@ -98,7 +87,7 @@ export class Memory {
     this.db(type, addr, ...args)
   }
 
-  ld (type, addr) { return this._view['get' + this._fns[type]](addr, _vm.littleEndian) }
+  ld (type, addr) { return this._view['get' + data_type_fns[type]](addr, _vm.littleEndian) }
 
   ldb (addr) { return this.ld('i8', addr) }
 
@@ -113,7 +102,7 @@ export class Memory {
     return this.ld(type, addr)
   }
 
-  st (type, addr, value) { this._view['set' + this._fns[type]](addr, value, _vm.littleEndian) }
+  st (type, addr, value) { this._view['set' + data_type_fns[type]](addr, value, _vm.littleEndian) }
 
   stb (addr, value) { this.st('i8', addr, value) }
 
@@ -225,6 +214,96 @@ export class Memory {
       sz = data_type_sizes[type]
     }
     return addr + sz
+  }
+
+  from_string (addr, str) {
+    const data = this._data
+    let w = str.length
+
+    let ti = addr
+    for (let x = 0; x < w; x++) {
+      data[ti++] = str.charCodeAt(x)
+    }
+
+    return ti
+  }
+
+  from_string_mask (addr, str, mask) {
+    const data = this._data
+    let w = str.length
+
+    let ti = addr
+    for (let x = 0; x < w; x++) {
+      data[ti++] = mask[str[x]]
+    }
+
+    return ti
+  }
+
+  to_string (addr, size) {
+    const data = this._data
+    let s = ''
+
+    let ti = addr
+    for (let y = 0; y < size; y++) {
+      s += String.fromCharCode(data[ti++])
+    }
+
+    return s
+  }
+
+  to_string_mask (addr, size, mask) {
+    const data = this._data
+    let s = ''
+
+    let ti = addr
+    for (let y = 0; y < size; y++) {
+      s += String.fromCharCode(mask[data[ti++]])
+    }
+
+    return s
+  }
+
+  from_array (addr, arr) {
+    let h = arr.length
+
+    let ti = addr
+    for (let y = 0; y < h; y++) {
+      ti = this.from_string(ti, arr[y])
+    }
+
+    return ti
+  }
+
+  from_array_mask (addr, arr, mask = {}) {
+    let h = arr.length
+
+    let ti = addr
+    for (let y = 0; y < h; y++) {
+      ti = this.from_string_mask(ti, arr[y], mask)
+    }
+
+    return ti
+  }
+
+  to_array (addr, w, h) {
+    let arr = []
+
+    for (let y = 0; y < h; y++) {
+      arr.push(this.to_string(addr + y * w, w))
+    }
+
+    return arr
+  }
+
+  to_array_mask (addr, w, h, mask) {
+    let arr = []
+
+    for (let y = 0; y < h; y++) {
+      arr.push(this.to_string_mask(addr + y * w, w, mask))
+    }
+
+    return arr
   }
 
   dump (addr = 0, size = 1024) {

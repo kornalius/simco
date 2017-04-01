@@ -5,7 +5,7 @@ export default class Beagle extends Chip {
   constructor (main) {
     super(main)
 
-    this.init(2, 'beagle', ['width', 'height', 'color', 'blinkrate'])
+    this.init('beagle', ['width', 'height', 'color', 'blinkrate', 'visible'])
 
     this.reset()
   }
@@ -39,13 +39,17 @@ export default class Beagle extends Chip {
   set blinkrate (value) { this._blinkrate = value }
 
   blink () {
-    this._blink_hidden = !this._blink_hidden
-    return this.update()
+    if (this._visible) {
+      this._blink_hidden = !this._blink_hidden
+      this.update(true)
+    }
+    return this
   }
 
   move_to (x, y) {
-    let w = this.orwell.width
-    let h = this.orwell.height
+    const orwell = this.orwell
+    let w = orwell.width
+    let h = orwell.height
 
     if (x > w) {
       x = w
@@ -82,7 +86,7 @@ export default class Beagle extends Chip {
       }
     }
 
-    return this.update()
+    return this.update(true)
   }
 
 }

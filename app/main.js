@@ -80,6 +80,8 @@ export class Main extends Emitter {
     this._interrupts = new Interrupt(this)
 
     this._guideo = new Guideo(this)
+    this._guideo.createChips()
+
     this._ken = new Ken(this)
     this._mickey = new Mickey(this)
 
@@ -133,7 +135,7 @@ export class Main extends Emitter {
     }
   }
 
-  default (name) { return _.get(defaults, name) }
+  defaults (name) { return _.get(defaults, name) }
 
   get status () { return this._status }
   set status (value) {

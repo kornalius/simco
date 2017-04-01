@@ -5,7 +5,7 @@ export default class Orwell extends Chip {
   constructor (main) {
     super(main)
 
-    this.init(3, 'orwell', ['width', 'height'])
+    this.init('orwell', ['width', 'height'])
 
     this.reset()
   }

@@ -12,7 +12,7 @@ export default class Guideo extends Chip {
   constructor (main) {
     super(main)
 
-    this.init('i8', 'guideo', ['width', 'height', 'scale'])
+    this.init('guideo', ['width', 'height', 'scale'])
 
     this._renderer = new PIXI.autoDetectRenderer(this._width * this._scale, this._height * this._scale, {})
     this._renderer.view.style.position = 'absolute'
@@ -24,26 +24,6 @@ export default class Guideo extends Chip {
 
     this._onResize = this.resize.bind(this)
     this.on('resize', this._onResize)
-
-    this.async(function () {
-      this._rainbow = new Rainbow(main)
-      this._fonzo = new Fonzo(main)
-      this._orwell = new Orwell(main)
-      this._beagle = new Beagle(main)
-      this._violet = new Violet(main)
-
-      this._overlays = new Overlays(main, {
-        screen: {},
-        scanlines: {},
-        scanline: {},
-        rgb: {},
-        noises: {},
-        crt: {},
-        monitor: {},
-      })
-
-      this.reset()
-    })
   }
 
   destroy () {
@@ -54,30 +34,41 @@ export default class Guideo extends Chip {
     this._orwell.destroy()
     this._beagle.destroy()
     this._violet.destroy()
-
     this._overlays.destroy()
-
-    if (this._sprite) {
-      this._sprite.destroy()
-    }
-
-    if (this._texture) {
-      this._texture.destroy()
-      this._texture = null
-    }
-
-    if (this._canvas) {
-      this._canvas.remove()
-      this._canvas = null
-    }
 
     super.destroy()
   }
 
+  createChips () {
+    let main = this._main
+
+    this._rainbow = new Rainbow(main)
+    this._fonzo = new Fonzo(main)
+    this._orwell = new Orwell(main)
+    this._beagle = new Beagle(main)
+    this._violet = new Violet(main)
+
+    this._overlays = new Overlays(main, {
+      screen: { scale: this._scale },
+      scanlines: {},
+      scanline: {},
+      rgb: {},
+      noises: {},
+      crt: {},
+      monitor: {},
+    })
+
+    this._screen = this._overlays.screen
+
+    this.context.clearRect(0, 0, this._width, this._height)
+    this._imageData = this.context.getImageData(0, 0, this._width, this._height)
+    this._pixels = new Uint32Array(this._imageData.data.buffer)
+
+    this.reset()
+  }
+
   reset () {
     super.reset()
-
-    this.clear()
 
     this._force_redraw = false
     this._force_flip = false
@@ -89,26 +80,16 @@ export default class Guideo extends Chip {
     this._violet.reset()
     this._overlays.reset()
 
+    this.clear()
+
     return this.resize()
   }
 
   get scale () { return this._scale }
   set scale (value) {
     this._scale = value
-    this.resize()
   }
 
-  set width (value) {
-    this._width = value
-    this.resize()
-  }
-
-  set height (value) {
-    this._height = value
-    this.resize()
-  }
-
-  get video_chip () { return this }
   get rainbow () { return this._rainbow }
   get fonzo () { return this._fonzo }
   get orwell () { return this._orwell }
@@ -120,10 +101,12 @@ export default class Guideo extends Chip {
   get stage () { return this._stage }
   get renderer () { return this._renderer }
 
-  get sprite () { return this._sprite }
-  get texture () { return this._texture }
-  get canvas () { return this._canvas }
-  get context () { return this._context }
+  get screen () { return this._screen }
+  get sprite () { return this._screen.sprite }
+  get texture () { return this.sprite.texture }
+  get canvasBuffer () { return this._screen.canvasBuffer }
+  get canvas () { return this.canvasBuffer.canvas }
+  get context () { return this._screen.context }
   get imageData () { return this._imageData }
   get pixels () { return this._pixels }
 
@@ -149,16 +132,18 @@ export default class Guideo extends Chip {
 
   redraw () {
     if (this._force_flip) {
-      let data = this._data
-      let pixels = this._pixels
-      let palette = this._rainbow.data
-      let sz = this._size
+      const data = this._data
+      let size = this._size
+      const palette = this._rainbow
+      const pixels = this._pixels
 
-      for (let i = 0; i < sz; i++) {
-        pixels[i] = palette[data[i]]
+      for (let i = 0; i < size; i++) {
+        pixels[i] = palette.color(data[i])
       }
 
-      this._context.putImageData(this._imageData, 0, 0)
+      this.context.putImageData(this._imageData, 0, 0)
+
+      this.texture.update()
 
       this.emit('flip')
 
@@ -179,54 +164,15 @@ export default class Guideo extends Chip {
   }
 
   resize () {
-    this._renderer.resize(this._width * this._scale, this._height * this._scale)
-
-    if (this._sprite) {
-      this._sprite.texture = null
-    }
-
-    if (this._texture) {
-      this._texture.destroy()
-      this._texture = null
-    }
-
-    if (this._canvas) {
-      this._canvas.remove()
-    }
-
-    this._canvas = document.createElement('canvas')
-    this._canvas.style.display = 'none'
-    this._canvas.width = this._width
-    this._canvas.height = this._height
-    document.body.appendChild(this._canvas)
-
-    this._texture = PIXI.Texture.fromCanvas(this._canvas, PIXI.SCALE_MODES.NEAREST)
-
-    if (!this._sprite) {
-      this._sprite = new PIXI.Sprite(this._texture)
-      this._overlays.screen.sprite.addChild(this._sprite)
-    }
-    else {
-      this._sprite.texture = this._texture
-    }
-
-    this._context = this._canvas.getContext('2d', { alpha: true, antialias: false })
-    this._context.clearRect(0, 0, this._width, this._height)
-
-    this._imageData = this._context.getImageData(0, 0, this._width, this._height)
-
-    this._pixels = new Uint32Array(this._imageData.data.buffer)
-
     this._overlays.resize()
-
     this.center()
-
     this.test()
-
     return this
   }
 
   pixel (x, y, c) {
+    const data = this._data
+
     let i
     if (_.isNumber(c)) {
       i = this.toIndex(x, y)
@@ -235,11 +181,104 @@ export default class Guideo extends Chip {
       i = x
       c = y
     }
-    const data = this._data
+
     if (data[i] !== c) {
       data[i] = c || 0
     }
+
     return data[i]
+  }
+
+  blit (addr, x, y, w, h) {
+    const mem = this.memory.data
+    const data = this._data
+    const top = this._top
+    const width = this._width
+    const count = this.rainbow.count
+
+    let si = addr
+    for (let by = 0; by < h; by++) {
+      let ti = top + ((y + by) * width + x)
+      for (let bx = 0; bx < w; bx++) {
+        let c = mem[si++]
+        data[ti] = c < count ? c : data[ti]
+        ti++
+      }
+    }
+
+    return this.update(true)
+  }
+
+  blit_mask (addr, x, y, w, h, fg = 15, bg = -1) {
+    const mem = this.memory.data
+    const data = this._data
+    const top = this._top
+    const width = this._width
+    const count = this.rainbow.count
+
+    let si = addr
+    for (let by = 0; by < h; by++) {
+      let ti = top + ((y + by) * width + x)
+      for (let bx = 0; bx < w; bx++) {
+        let c = mem[si++]
+        data[ti] = c < count ? fg : bg === -1 ? data[ti] : bg
+        ti++
+      }
+    }
+
+    return this.update(true)
+  }
+
+  blit_array (arr, x, y, mask = {}) {
+    const data = this._data
+    const top = this._top
+    const width = this._width
+
+    let w = _.first(arr).length
+    let h = arr.length
+
+    for (let by = 0; by < h; by++) {
+      let ti = top + ((by + y) * width + x)
+      for (let bx = 0; bx < w; bx++) {
+        data[ti++] = mask[arr[by]]
+      }
+    }
+  }
+
+  copy_rect (x, y, w, h, addr) {
+    const mem = this.memory.data
+    const data = this._data
+    const top = this._top
+    const width = this._width
+
+    let ti = addr
+    for (let by = 0; by < h; by++) {
+      let si = top + ((by + y) * width + x)
+      for (let bx = 0; bx < w; bx++) {
+        mem[ti++] = data[si++]
+      }
+    }
+
+    return ti
+  }
+
+  to_array (x, y, w, h, mask = {}) {
+    const data = this._data
+    const top = this._top
+    const width = this._width
+
+    let arr = []
+
+    for (let by = 0; by < h; by++) {
+      let ti = top + ((by + y) * width + x)
+      let s = ''
+      for (let bx = 0; bx < w; bx++) {
+        s += mask[data[ti++]]
+      }
+      arr.push(s)
+    }
+
+    return arr
   }
 
   toIndex (x, y) { return y * this._width + x }
@@ -265,11 +304,11 @@ export default class Guideo extends Chip {
   }
 
   test () {
-    this.clear()
-
     this.pixel(10, 10, 13)
     this.pixel(20, 10, 5)
     this.pixel(30, 10, 6)
+
+    this._fonzo.test()
 
     // let screen = this._overlays.screen.sprite
     // screen.removeChildren()
