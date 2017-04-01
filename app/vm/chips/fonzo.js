@@ -1,4 +1,5 @@
 import Chip from './chip.js'
+import { defaults } from '../../globals.js'
 
 export default class Fonzo extends Chip {
 
@@ -15,39 +16,39 @@ export default class Fonzo extends Chip {
 
     this.memory.from_array_mask(this._top + 33 * this._cell_size, [
       '       ',
-      '   X   ',
-      '   X   ',
-      '   X   ',
-      '   X   ',
-      '   X   ',
+      '   w   ',
+      '   w   ',
+      '   w   ',
+      '   w   ',
+      '   w   ',
       '       ',
-      '   X   ',
+      '   w   ',
       '       ',
-    ], { ' ': 16, X: 1 })
+    ], defaults.chars_map)
 
     this.memory.from_array_mask(this._top + 65 * this._cell_size, [
       '       ',
-      '   X   ',
-      '  X X  ',
-      ' X   X ',
-      ' X   X ',
-      ' XXXXX ',
-      ' X   X ',
-      ' X   X ',
+      '   w   ',
+      '  w w  ',
+      ' w   w ',
+      ' w   w ',
+      ' wwwww ',
+      ' w   w ',
+      ' w   w ',
       '       ',
-    ], { ' ': 16, X: 1 })
+    ], defaults.chars_map)
 
     this.memory.from_array_mask(this._top + 66 * this._cell_size, [
       '       ',
-      ' XXXX  ',
-      ' X   X ',
-      ' X   X ',
-      ' XXXX  ',
-      ' X   X ',
-      ' X   X ',
-      ' XXXX  ',
+      ' wwww  ',
+      ' w   w ',
+      ' w   w ',
+      ' wwww  ',
+      ' w   w ',
+      ' w   w ',
+      ' wwww  ',
       '       ',
-    ], { ' ': 16, X: 1 })
+    ], defaults.chars_map)
 
     this.test()
   }

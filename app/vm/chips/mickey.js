@@ -1,4 +1,5 @@
 import Chip from './chip.js'
+import { defaults } from '../../globals.js'
 
 export default class Mickey extends Chip {
 
@@ -44,13 +45,13 @@ export default class Mickey extends Chip {
 
     this.memory.from_array_mask(this._top + this._frame * this._cell_size, [
       '..    ',
-      '.X.   ',
-      '.XX.  ',
-      '.XXX. ',
-      '.XXXX.',
-      '.X....',
+      '.w.   ',
+      '.ww.  ',
+      '.www. ',
+      '.wwww.',
+      '.w....',
       '...   ',
-    ], { ' ': 16, X: 15, '.': 0 })
+    ], defaults.chars_map)
 
     return this
   }

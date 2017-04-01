@@ -79,6 +79,26 @@ const defaults = {
   alto: {
     count: 4 * 1024,
   },
+
+  chars_map: {
+    '.': 0,
+    r: 1,
+    g: 2,
+    y: 3,
+    b: 4,
+    p: 5,
+    c: 6,
+    E: 7,
+    e: 8,
+    R: 9,
+    G: 10,
+    Y: 11,
+    B: 12,
+    P: 13,
+    C: 14,
+    w: 15,
+    ' ': 16,
+  }
 }
 
 let errors = 0
