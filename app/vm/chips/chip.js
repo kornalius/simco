@@ -11,13 +11,17 @@ export default class Chip extends Emitter {
 
     this._main = main
 
-    this._data = null
     this._width = 0
     this._height = 0
+
     this._count = 0
-    this._size = 0
+
+    this._data = null
+    this._data_format = null
     this._top = 0
     this._bottom = 0
+    this._size = 0
+    this._cell_size = 0
     this._data_size = 0
   }
 
@@ -36,9 +40,10 @@ export default class Chip extends Emitter {
       this._data_format = main.defaults(name + '.data_format') || 'i8'
       this._data_size = main.defaults(name + '.data_size') || 1
       this._data_size = _.isString(this._data_format) ? data_type_sizes[this._data_format] : this._data_size
+
       this._cell_size = this._width * this._height * this._data_size
 
-      this._size = this._width * this._height * this._data_size * this._count
+      this._size = this._cell_size * this._count
 
       this._top = _.get(main, 'mem_map.' + name + '.top', currentOffset)
       this._bottom = this._top + this._size - 1
@@ -55,7 +60,7 @@ export default class Chip extends Emitter {
 
       currentOffset = this._bottom + 1
 
-      this._data = new window[data_type_fns[this._data_format] + 'Array'](this.memory.buffer, this._top, this._cell_size * this._count)
+      this._data = new window[data_type_fns[this._data_format] + 'Array'](this.memory.buffer, this._top, this._size)
     }
 
     return this
@@ -85,6 +90,7 @@ export default class Chip extends Emitter {
 
   get count () { return this._count }
   get data_size () { return this._data_size }
+  get cell_size () { return this._cell_size }
 
   get width () { return this._width }
   get height () { return this._height }

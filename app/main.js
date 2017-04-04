@@ -135,7 +135,7 @@ export class Main extends Emitter {
     }
   }
 
-  defaults (name) { return _.get(defaults, name) }
+  defaults (name, defaultValue) { return _.get(defaults, name, defaultValue) }
 
   get status () { return this._status }
   set status (value) {

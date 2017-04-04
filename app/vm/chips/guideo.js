@@ -59,6 +59,7 @@ export default class Guideo extends Chip {
     })
 
     this._screen = this._overlays.screen
+    this._screen. this._data, this._top)
 
     this.context.clearRect(0, 0, this._width, this._height)
     this._imageData = this.context.getImageData(0, 0, this._width, this._height)
@@ -102,8 +103,11 @@ export default class Guideo extends Chip {
   get renderer () { return this._renderer }
 
   get screen () { return this._screen }
-  get sprite () { return this._screen.sprite }
-  get texture () { return this.sprite.texture }
+  get screenSprite () { return this._screen }
+  get spritesLayer () { return this._screen.spritesLayer }
+  get mouseLayer () { return this._screen.mouseLayer }
+
+  get texture () { return this.screenSprite.texture }
   get canvasBuffer () { return this._screen.canvasBuffer }
   get canvas () { return this.canvasBuffer.canvas }
   get context () { return this._screen.context }
@@ -132,18 +136,7 @@ export default class Guideo extends Chip {
 
   redraw () {
     if (this._force_flip) {
-      const data = this._data
-      let size = this._size
-      const palette = this._rainbow
-      const pixels = this._pixels
-
-      for (let i = 0; i < size; i++) {
-        pixels[i] = palette.color(data[i])
-      }
-
-      this.context.putImageData(this._imageData, 0, 0)
-
-      this.texture.update()
+      this._screen.updateTexture()
 
       this.emit('flip')
 

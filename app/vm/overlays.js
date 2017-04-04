@@ -1,5 +1,5 @@
 import _ from 'lodash'
-
+import CanvasTexture from './canvastexture.js'
 
 export class Overlay {
 
@@ -9,46 +9,44 @@ export class Overlay {
     this._width = width
     this._height = height
 
+    this._canvasTexture = new CanvasTexture()
+
     this.reset()
   }
 
   create () {
-    this._canvasBuffer = new PIXI.CanvasBuffer(this._width, this._height)
+    this._canvasTexture.create(this._width, this._height)
 
-    this._texture = PIXI.Texture.fromCanvas(this._canvasBuffer.canvas, PIXI.SCALE_MODES.NEAREST)
-    this._texture.scaleMode = PIXI.SCALE_MODES.NEAREST
+    this.sprite.x = this.main.defaults('border_size', 0)
+    this.sprite.y = this.main.defaults('border_size', 0)
 
-    this._sprite = new PIXI.Sprite(this._texture)
+    return this
+  }
 
-    this._context = this._canvasBuffer.canvas.getContext('2d', { alpha: true, antialias: false })
+  destroy () {
+    this._canvasTexture.destroy()
   }
 
   reset () {
     this._last = 0
-  }
 
-  destroy () {
-    if (this._texture) {
-      this._texture.destroy()
-      this._texture = null
-    }
+    this._canvasTexture.destroy()
 
-    if (this._canvasBuffer) {
-      this._canvasBuffer.destroy()
-      this._canvasBuffer = null
-    }
+    this._canvasTexture.create(this.main, this._width, this._height)
 
-    if (this._sprite) {
-      this._sprite.destroy()
-      this._sprite = null
-    }
+    return this
   }
 
   tick (t) {
   }
 
   update () {
-    this.guideo.update()
+    return this.guideo.update()
+  }
+
+  updateTexture (data, palette) {
+    this._canvasTexture.updateTexture(data, palette)
+    return this.guideo.update(true)
   }
 
   get main () { return this._overlays.main }
@@ -56,10 +54,21 @@ export class Overlay {
   get stage () { return this.main.stage }
   get renderer () { return this.main.renderer }
 
-  get canvasBuffer () { return this._canvasBuffer }
-  get texture () { return this._texture }
-  get sprite () { return this._sprite }
-  get context () { return this._context }
+  get context () { return this._canvasTexture.context }
+
+}
+
+
+export class BorderOverlay extends Overlay {
+
+  constructor (overlays, width, height, options) {
+    super(overlays, width + options.border_size * 2, height + options.border_size * 2)
+
+    this.create()
+
+    this._sprite.x = 0
+    this._sprite.y = 0
+  }
 
 }
 
@@ -70,13 +79,23 @@ export class ScreenOverlay extends Overlay {
     super(overlays, width, height)
 
     this.create()
-
-    this._sprite.x = _.get(options, 'offset.x', 0) + _.get(options, 'margins.x', 0) / 2
-    this._sprite.y = _.get(options, 'offset.y', 0) + _.get(options, 'margins.y', 0) / 2
   }
 
+  create () {
+    super.create()
+
+    this._spritesLayer = new PIXI.Container()
+    this._sprite.addChild(this._spritesLayer)
+
+    this._mouseLayer = new PIXI.Container()
+    this._sprite.addChild(this._mouseLayer)
+  }
+
+  get spritesLayer () { return this._spritesLayer }
+  get mouseLayer () { return this._mouseLayer }
+
   update () {
-    this.guideo.update(true)
+    return this.guideo.update(true)
   }
 
 }
@@ -93,7 +112,7 @@ export class ScanlinesOverlay extends Overlay {
     this.create()
 
     let a = this._alpha * 255
-    let data = this._context.getImageData(0, 0, this._width, this._height)
+    let data = this.context.getImageData(0, 0, this._width, this._height)
     let pixels = data.data
     let sz = this._width * 4
     let idx
@@ -103,7 +122,7 @@ export class ScanlinesOverlay extends Overlay {
         pixels.set([0, 0, 0, a], i)
       }
     }
-    this._context.putImageData(data, 0, 0)
+    this.context.putImageData(data, 0, 0)
   }
 
 }
@@ -120,7 +139,7 @@ export class ScanlineOverlay extends Overlay {
 
     this.create()
 
-    let data = this._context.getImageData(0, 0, this._width, this._height)
+    let data = this.context.getImageData(0, 0, this._width, this._height)
     let pixels = data.data
     let sz = this._width * 4
     let len = this._height * sz
@@ -137,7 +156,7 @@ export class ScanlineOverlay extends Overlay {
       l++
     }
 
-    this._context.putImageData(data, 0, 0)
+    this.context.putImageData(data, 0, 0)
 
     this._sprite.y = -this._sprite.height
   }
@@ -178,7 +197,7 @@ export class NoisesOverlay extends Overlay {
       noise.create()
       noise._sprite.visible = c === 0
 
-      let data = noise._context.getImageData(0, 0, this._width, this._height)
+      let data = noise.context.getImageData(0, 0, this._width, this._height)
       let pixels = data.data
       let len = pixels.length
       let r = this._red
@@ -190,9 +209,9 @@ export class NoisesOverlay extends Overlay {
           pixels.set([Math.trunc(Math.random() * r), Math.trunc(Math.random() * g), Math.trunc(Math.random() * b), a], i)
         }
       }
-      noise._context.putImageData(data, 0, 0)
+      noise.context.putImageData(data, 0, 0)
       this._noises[c] = noise
-      this.guideo.stage.addChild(noise.sprite)
+      this.stage.addChild(noise.sprite)
     }
 
     this._noiseKeys = _.keys(this._noises)
@@ -237,14 +256,14 @@ export class RgbOverlay extends Overlay {
 
     this.create()
 
-    let data = this._context.getImageData(0, 0, this._width, this._height)
+    let data = this.context.getImageData(0, 0, this._width, this._height)
     let pixels = data.data
     let len = pixels.length
     let a = this._alpha * 255
     for (let i = 0; i < len; i += 12) {
       pixels.set([100, 100, 100, a], i)
     }
-    this._context.putImageData(data, 0, 0)
+    this.context.putImageData(data, 0, 0)
   }
 
 }
@@ -261,13 +280,13 @@ export class CrtOverlay extends Overlay {
 
     this.create()
 
-    this._context.globalCompositeOperation = 'darker'
-    let gradient = this._context.createRadialGradient(this._width / 2, this._height / 2, this._height / 2, this._width / 2, this._height / 2, this._height / this._radius)
+    this.context.globalCompositeOperation = 'darker'
+    let gradient = this.context.createRadialGradient(this._width / 2, this._height / 2, this._height / 2, this._width / 2, this._height / 2, this._height / this._radius)
     gradient.addColorStop(0, 'rgba(255, 255, 255, ' + this._inside_alpha + ')')
     gradient.addColorStop(1, 'rgba(0, 0, 0, ' + this._outside_alpha + ')')
-    this._context.fillStyle = gradient
-    this._context.fillRect(0, 0, this._width, this._height)
-    this._context.globalCompositeOperation = 'source-over'
+    this.context.fillStyle = gradient
+    this.context.fillRect(0, 0, this._width, this._height)
+    this.context.globalCompositeOperation = 'source-over'
   }
 
 }
@@ -294,6 +313,10 @@ export class Overlays {
       l[name].sprite.scale = new PIXI.Point(s, s)
       stage.addChild(l[name].sprite)
       return l[name]
+    }
+
+    if (_.get(options, 'border')) {
+      _createOverlay(this, BorderOverlay, 'border', { width, height })
     }
 
     if (_.get(options, 'screen')) {

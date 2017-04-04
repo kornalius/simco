@@ -1,43 +1,76 @@
 import Chip from './chip.js'
+import CanvasTexture from '../canvastexture.js'
 
 export default class Violet extends Chip {
 
   constructor (main) {
     super(main)
 
-    this._list = []
-
     this.init('violet', ['data_size', 'count', 'width', 'height'])
+
+    this._canvasTexture = new CanvasTexture()
 
     this.reset()
   }
 
-  get list () { return this._list }
+  reset () {
+    super.reset()
 
-  clear (v = 0) {
-    this._list = []
-    return super.clear(v)
+    this._canvasTexture.destroy()
+
+    this._canvasTexture.create(this._width * this._count, this._height)
+
+    this._spritesLayer = this._main.guideo.spritesLayer
+
+    this.clear()
+  }
+
+  destroy () {
+    this._canvasTexture.destroy()
+
+    super.destroy()
+  }
+
+  clear () {
+    this.spritesLayer.removeChildren()
+
+    super.clear()
+
+    return this.update()
+  }
+
+  get spritesLayer () { return this._spritesLayer }
+
+  get canvasTexture () { return this._canvasTexture }
+
+  update () {
+    this._canvasTexture.updateTexture(this._data, this.rainbow)
   }
 
   find (name) {
-    return _.find(this._list, { name })
-  }
-
-  index (name) {
-    return _.indexOf(this._list, { name })
+    return _.find(this.spritesLayer.children, { _name: name })
   }
 
   add (name, frame, x, y, z) {
-    this._list.push({ name, frame, x, y, z })
-    return this
+    let s = new PIXI.Sprite(this._texture)
+    s._name = name
+    this.frame(name, frame)
+    this.spritesLayer.addChild(s)
+    return s
   }
 
   del (name) {
-    let i = this.index(name)
-    if (i !== -1) {
-      this._list.splice(i, 1)
+    let s = this.find(name)
+    if (s) {
+      this.spritesLayer.removeChild(s)
     }
     return this
+  }
+
+  frameRect (frame) {
+    const w = this._width
+    const h = this._height
+    return new PIXI.Rectangle(frame * w, 0, frame * w + w, h)
   }
 
   x (name, value) {
@@ -64,6 +97,15 @@ export default class Violet extends Chip {
     return s ? s.z : 0
   }
 
+  frame (name, value) {
+    let s = this.find(name)
+    if (s && value) {
+      s._frame = value
+      s.frame = this.frameRect(value)
+    }
+    return s ? s._frame : 0
+  }
+
   move_to (name, x, y, z) {
     let s = this.find(name)
     if (s) {
@@ -87,19 +129,6 @@ export default class Violet extends Chip {
       }
       this.update()
     }
-    return this
-  }
-
-  draw (frame, x, y) {
-    if (_.isUndefined(frame)) {
-      for (let s of _.sortBy(this._list, 'z')) {
-        this.draw(s.frame, s.x, s.y)
-      }
-    }
-    else {
-      this.guideo.blit(this._top + frame * this._cell_size, x, y, this._width, this._height)
-    }
-
     return this
   }
 
