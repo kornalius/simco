@@ -32,7 +32,9 @@ export default class Violet extends Chip {
   }
 
   clear () {
-    this.spritesLayer.removeChildren()
+    if (this._spritesLayer) {
+      this._spritesLayer.removeChildren()
+    }
 
     super.clear()
 
@@ -100,10 +102,10 @@ export default class Violet extends Chip {
   frame (name, value) {
     let s = this.find(name)
     if (s && value) {
-      s._frame = value
-      s.frame = this.frameRect(value)
+      s.__frame = value
+      s.texture = new PIXI.Texture(this._canvasTexture.texture, this.frameRect(value))
     }
-    return s ? s._frame : 0
+    return s ? s.__frame : 0
   }
 
   move_to (name, x, y, z) {

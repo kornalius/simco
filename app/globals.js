@@ -23,10 +23,15 @@ const defaults = {
     collect_delay: 30 * 1000,
   },
 
+  border: {
+    size: 64,
+    color: 1,
+  },
+
   guideo: {
     width: 320,
     height: 240,
-    scale: 4,
+    scale: 3,
   },
 
   rainbow: {

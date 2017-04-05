@@ -15,24 +15,38 @@ export class Overlay {
   }
 
   create () {
-    this._canvasTexture.create(this._width, this._height)
-
-    this.sprite.x = this.main.defaults('border_size', 0)
-    this.sprite.y = this.main.defaults('border_size', 0)
-
-    return this
+    return this.resize(this._width, this._height)
   }
 
   destroy () {
+    if (this._sprite) {
+      this._sprite.destroy()
+      this._sprite = null
+    }
+
     this._canvasTexture.destroy()
   }
 
   reset () {
     this._last = 0
 
+    return this
+  }
+
+  resize (width, height) {
+    this._width = width
+    this._height = height
+
     this._canvasTexture.destroy()
 
-    this._canvasTexture.create(this.main, this._width, this._height)
+    this._canvasTexture.create(width, height)
+
+    if (this._sprite) {
+      this._sprite.destroy()
+      this._sprite = null
+    }
+
+    this._sprite = new PIXI.Sprite(this.texture)
 
     return this
   }
@@ -54,7 +68,12 @@ export class Overlay {
   get stage () { return this.main.stage }
   get renderer () { return this.main.renderer }
 
+  get sprite () { return this._sprite }
+
   get context () { return this._canvasTexture.context }
+  get texture () { return this._canvasTexture.texture }
+  get imageData () { return this._canvasTexture.imageData }
+  get pixels () { return this._canvasTexture.pixels }
 
 }
 
@@ -62,13 +81,25 @@ export class Overlay {
 export class BorderOverlay extends Overlay {
 
   constructor (overlays, width, height, options) {
-    super(overlays, width + options.border_size * 2, height + options.border_size * 2)
+    super(overlays, width + _.get(options, 'size', 0) * 2, height + _.get(options, 'size', 0) * 2)
 
     this.create()
 
-    this._sprite.x = 0
-    this._sprite.y = 0
+    this._graphics = new PIXI.Graphics()
+    this._sprite.addChild(this._graphics)
+
+    this.color = _.get(options, 'color', 0)
   }
+
+  get color () { return this._color }
+  set color (value) {
+    this._color = value
+    this._graphics.beginFill(this.guideo.rainbow.color(this._color), 255)
+    this._graphics.drawRect(0, 0, this._width, this._height)
+    this._graphics.endFill()
+  }
+
+  get graphics () { return this._graphics }
 
 }
 
@@ -84,6 +115,9 @@ export class ScreenOverlay extends Overlay {
   create () {
     super.create()
 
+    this._sprite.x = this.main.defaults('border.size', 0)
+    this._sprite.y = this.main.defaults('border.size', 0)
+
     this._spritesLayer = new PIXI.Container()
     this._sprite.addChild(this._spritesLayer)
 
@@ -91,10 +125,18 @@ export class ScreenOverlay extends Overlay {
     this._sprite.addChild(this._mouseLayer)
   }
 
+  reset () {
+    this._data = null
+    this._palette = null
+
+    return super.reset()
+  }
+
   get spritesLayer () { return this._spritesLayer }
   get mouseLayer () { return this._mouseLayer }
 
   update () {
+    this.updateTexture(this._data, this._palette)
     return this.guideo.update(true)
   }
 
@@ -346,19 +388,17 @@ export class Overlays {
     }
 
     if (_.get(options, 'monitor')) {
-      let mx = _.get(options, 'monitor.margins.x', 0)
-      let my = _.get(options, 'monitor.margins.y', 0)
       let w = _.get(options, 'monitor.width', width)
       let h = _.get(options, 'monitor.height', height)
       let s = _.get(options, 'monitor.scale', 1)
 
       let tex = PIXI.Texture.fromImage('./build/' + require('file?name=assets/[path]/[name].[ext]!../../assets/imgs/crt.png'))
       l.monitor = new PIXI.Sprite(tex)
-      l.monitor.width = w + mx
-      l.monitor.height = h + my
+      l.monitor.x = 0
+      l.monitor.y = 0
+      l.monitor.width = w
+      l.monitor.height = h
       l.monitor.scale = new PIXI.Point(s, s)
-      l.monitor.x = _.get(options, 'monitor.offset.x', 0) + mx / -2
-      l.monitor.y = _.get(options, 'monitor.offset.y', 0) + my / -2
       stage.addChild(l.monitor)
     }
   }

@@ -7,19 +7,17 @@ export default class CanvasTexture {
 
     this._size = width * height
 
-    this._canvasBuffer = new PIXI.CanvasBuffer(this._width, this._height)
+    this._canvasBuffer = new PIXI.CanvasBuffer(width, height)
 
     this._texture = PIXI.Texture.fromCanvas(this._canvasBuffer.canvas, PIXI.SCALE_MODES.NEAREST)
     this._texture.scaleMode = PIXI.SCALE_MODES.NEAREST
 
     this._context = this._canvasBuffer.canvas.getContext('2d', { alpha: true, antialias: false })
-    this._context.clearRect(0, 0, this._width, this._height)
+    this._context.clearRect(0, 0, width, height)
 
-    this._imageData = this._context.getImageData(0, 0, this._width, this._height)
+    this._imageData = this._context.getImageData(0, 0, width, height)
 
     this._pixels = new Uint32Array(this._imageData.data.buffer)
-
-    this._canvasTexture.clear()
   }
 
   destroy () {
@@ -44,9 +42,10 @@ export default class CanvasTexture {
   get width () { return this._width }
   get height () { return this._height }
 
-  get canvasBuffer () { return this._canvasBuffer }
   get texture () { return this._texture }
   get context () { return this._context }
+  get canvasBuffer () { return this._canvasBuffer }
+  get canvas () { return this._canvasBuffer.canvas }
   get imageData () { return this._imageData }
   get pixels () { return this._pixels }
 
@@ -58,16 +57,18 @@ export default class CanvasTexture {
   }
 
   updateTexture (data, palette) {
-    const size = this._size
-    const pixels = this._pixels
+    if (this._context) {
+      const size = this._size
+      const pixels = this._pixels
 
-    for (let i = 0; i < size; i++) {
-      pixels[i] = palette.color(data[i])
+      for (let i = 0; i < size; i++) {
+        pixels[i] = palette.color(data[i])
+      }
+
+      this._context.putImageData(this._imageData, 0, 0)
+
+      this._texture.update()
     }
-
-    this._context.putImageData(this._imageData, 0, 0)
-
-    this._texture.update()
 
     return this
   }

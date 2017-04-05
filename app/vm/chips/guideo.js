@@ -14,7 +14,9 @@ export default class Guideo extends Chip {
 
     this.init('guideo', ['width', 'height', 'scale'])
 
-    this._renderer = new PIXI.autoDetectRenderer(this._width * this._scale, this._height * this._scale, {})
+    let borderSize = main.defaults('border.size', 0) * 2
+
+    this._renderer = new PIXI.autoDetectRenderer(this._width * this._scale + borderSize, this._height * this._scale + borderSize, {})
     this._renderer.view.style.position = 'absolute'
     this._renderer.view.style.cursor = 'none'
     this._renderer.view.id = 'guideo'
@@ -43,12 +45,9 @@ export default class Guideo extends Chip {
     let main = this._main
 
     this._rainbow = new Rainbow(main)
-    this._fonzo = new Fonzo(main)
-    this._orwell = new Orwell(main)
-    this._beagle = new Beagle(main)
-    this._violet = new Violet(main)
 
     this._overlays = new Overlays(main, {
+      border: { size: main.defaults('border.size', 0), color: main.defaults('border.color', 0) },
       screen: { scale: this._scale },
       scanlines: {},
       scanline: {},
@@ -59,9 +58,15 @@ export default class Guideo extends Chip {
     })
 
     this._screen = this._overlays.screen
-    this._screen. this._data, this._top)
+    this._screen._data = this._data
+
+    this._fonzo = new Fonzo(main)
+    this._orwell = new Orwell(main)
+    this._beagle = new Beagle(main)
+    this._violet = new Violet(main)
 
     this.context.clearRect(0, 0, this._width, this._height)
+
     this._imageData = this.context.getImageData(0, 0, this._width, this._height)
     this._pixels = new Uint32Array(this._imageData.data.buffer)
 
@@ -103,11 +108,11 @@ export default class Guideo extends Chip {
   get renderer () { return this._renderer }
 
   get screen () { return this._screen }
-  get screenSprite () { return this._screen }
+  get screenSprite () { return this._screen.sprite }
   get spritesLayer () { return this._screen.spritesLayer }
   get mouseLayer () { return this._screen.mouseLayer }
 
-  get texture () { return this.screenSprite.texture }
+  get texture () { return this._screen.texture }
   get canvasBuffer () { return this._screen.canvasBuffer }
   get canvas () { return this.canvasBuffer.canvas }
   get context () { return this._screen.context }
@@ -136,7 +141,7 @@ export default class Guideo extends Chip {
 
   redraw () {
     if (this._force_flip) {
-      this._screen.updateTexture()
+      this._screen.updateTexture(this._data, this._rainbow)
 
       this.emit('flip')
 
@@ -187,15 +192,12 @@ export default class Guideo extends Chip {
     const data = this._data
     const top = this._top
     const width = this._width
-    const count = this.rainbow.count
 
     let si = addr
     for (let by = 0; by < h; by++) {
       let ti = top + ((y + by) * width + x)
       for (let bx = 0; bx < w; bx++) {
-        let c = mem[si++]
-        data[ti] = c < count ? c : data[ti]
-        ti++
+        data[ti++] = mem[si++]
       }
     }
 

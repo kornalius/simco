@@ -40,6 +40,9 @@ export default class Mickey extends Chip {
   reset () {
     super.reset()
 
+    this._screenSprite = this.guideo.screenSprite
+    this._scale = this.guideo.scale
+
     this._x = 0
     this._y = 0
     this._color = this._default_color
@@ -52,7 +55,14 @@ export default class Mickey extends Chip {
 
     this._mouseLayer = this._main.guideo.mouseLayer
 
-    this.memory.from_array_mask(this._top + this._frame * this._cell_size, [
+    if (this._sprite) {
+      this._sprite.destroy()
+      this._sprite = null
+    }
+
+    this._mouseLayer.removeChildren()
+
+    this.memory.from_2d_array_mask(this._top, 0, this.count, this._width, [
       '..    ',
       '.w.   ',
       '.ww.  ',
@@ -61,6 +71,14 @@ export default class Mickey extends Chip {
       '.w....',
       '...   ',
     ], defaults.chars_map)
+
+    this.update()
+
+    this._sprite = new PIXI.Sprite(this._canvasTexture.texture)
+
+    this.frame = this._default_frame
+
+    this._mouseLayer.addChild(this._sprite)
 
     return this
   }
@@ -80,6 +98,11 @@ export default class Mickey extends Chip {
       stage.off('touchendoutside', this._onMouseUp)
     }
 
+    if (this._sprite) {
+      this._sprite.destroy()
+      this._sprite = null
+    }
+
     this.mouseLayer.removeChildren()
 
     this._canvasTexture.destroy()
@@ -88,23 +111,32 @@ export default class Mickey extends Chip {
   }
 
   get mouseLayer () { return this._mouseLayer }
+  get sprite () { return this._sprite }
 
   get canvasTexture () { return this._canvasTexture }
+
+  frameRect (frame) {
+    const w = this._width
+    const h = this._height
+    return new PIXI.Rectangle(frame * w, 0, frame * w + w, h)
+  }
 
   get x () { return this._x }
   set x (value) {
     this._x = value
+    this._sprite.x = value
   }
 
   get y () { return this._y }
   set y (value) {
     this._y = value
+    this._sprite.y = value
   }
 
   get frame () { return this._frame }
   set frame (value) {
     this._frame = value
-    this.update()
+    this._sprite.texture = new PIXI.Texture(this._canvasTexture.texture, this.frameRect(this._frame))
   }
 
   get btns () { return this._btns }
@@ -118,6 +150,7 @@ export default class Mickey extends Chip {
 
   update () {
     this._canvasTexture.updateTexture(this._data, this.rainbow)
+    return this
   }
 
   getEventInfo (e) {
@@ -125,8 +158,11 @@ export default class Mickey extends Chip {
 
     let size = new PIXI.Point(renderer.width - this._width, renderer.height - this._height)
 
-    let x = Math.trunc(Math.min(size.x, Math.max(0, e.data.global.x)) / this.guideo.scale)
-    let y = Math.trunc(Math.min(size.y, Math.max(0, e.data.global.y)) / this.guideo.scale)
+    let gx = e.data.global.x - this._screenSprite.x
+    let gy = e.data.global.y - this._screenSprite.y
+
+    let x = Math.trunc(Math.min(size.x, Math.max(0, gx)) / this._scale)
+    let y = Math.trunc(Math.min(size.y, Math.max(0, gy)) / this._scale)
 
     return { x, y, button: e.data.originalEvent.button }
   }
@@ -159,8 +195,8 @@ export default class Mickey extends Chip {
 
     let { x, y, button } = this.getEventInfo(e)
 
-    this._x = Math.min(x, width - this._width)
-    this._y = Math.min(y, height - this._height)
+    this.x = Math.min(x, width - this._width)
+    this.y = Math.min(y, height - this._height)
 
     this.emit('mouse.move', { x, y, button })
 

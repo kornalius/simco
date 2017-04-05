@@ -29,6 +29,7 @@ export default class Ken extends Chip {
   destroy () {
     window.removeEventListener('keydown', this._onKeydown)
     window.removeEventListener('keyup', this._onKeyup)
+
     super.destroy()
   }
 

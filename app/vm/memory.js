@@ -286,6 +286,17 @@ export class Memory {
     return ti
   }
 
+  from_2d_array_mask (addr, frame, count, width, arr, mask = {}) {
+    let h = arr.length
+    let fullWidth = width * count
+    let offset = frame * width
+
+    for (let y = 0; y < h; y++) {
+      let ti = addr + y * fullWidth + offset
+      this.from_string_mask(ti, arr[y], mask)
+    }
+  }
+
   to_array (addr, w, h) {
     let arr = []
 
