@@ -1,7 +1,8 @@
 import hexy from 'hexy'
 import prettyBytes from 'pretty-bytes'
 import { data_type_size } from './memory.js'
-
+import { runtime_error } from '../globals.js'
+import { hex } from '../utils.js'
 
 export default class MemoryManager {
 
@@ -16,11 +17,13 @@ export default class MemoryManager {
   reset () {
     this._blocks = []
     this._last = 0
+
     return this.collect()
   }
 
   destroy () {
     this.collect()
+
     this._blocks = []
     this._last = 0
   }
@@ -81,7 +84,7 @@ export default class MemoryManager {
     }
 
     if (n + size > this.avail_mem) {
-      _vm.hlt()
+      runtime_error(0x01)
       return 0
     }
 
@@ -89,19 +92,20 @@ export default class MemoryManager {
 
     this._blocks.push({ top: addr, bottom: addr + size - 1, size, count, type, used: true })
 
-    _vm.fill(0, addr, size)
+    this._main.memory.fill(0, addr, size)
 
     return addr
   }
 
   alloc (type, count, ...value) {
     let addr = this._alloc(type, count)
+    const main = this._main
 
     if (value) {
       let size = data_type_size(type) * count
       let a = addr
       for (let v of value) {
-        _vm.write(v, a, type)
+        main.write(v, a, type)
         a += size
       }
     }
@@ -114,6 +118,7 @@ export default class MemoryManager {
     if (b) {
       b.used = false
     }
+    return this
   }
 
   block (addr) {
@@ -137,12 +142,15 @@ export default class MemoryManager {
 
   collect () {
     let n = []
+
     for (let b of this._blocks) {
       if (!b.used) {
         n.push(b)
       }
     }
+
     this._blocks = n
+
     return this
   }
 
@@ -150,8 +158,8 @@ export default class MemoryManager {
     console.log('memory _blocks dump...', 'avail_mem:', prettyBytes(this.avail_mem), 'used:', prettyBytes(this.used_mem), 'free:', prettyBytes(this.free_mem))
     for (let b of this._blocks) {
       console.log('')
-      console.log('offset:', _vm.hex(b.top, 32), 'size:', this.size(b.top), 'type:', this.type(b.top))
-      console.log(hexy.hexy(_vm.mem_buffer, { offset: b.top, length: Math.min(255, b.size), width: 16, caps: 'upper', indent: 2 }))
+      console.log('offset:', hex(b.top, 32), 'size:', this.size(b.top), 'type:', this.type(b.top))
+      console.log(hexy.hexy(this._main.mem_buffer, { offset: b.top, length: Math.min(255, b.size), width: 16, caps: 'upper', indent: 2 }))
     }
   }
 }

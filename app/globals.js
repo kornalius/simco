@@ -103,7 +103,19 @@ const defaults = {
     C: 14,
     w: 15,
     ' ': 16,
-  }
+  },
+
+  runtime_errors: {
+    0x01: 'Out of memory',
+    0x02: 'Stack underflow',
+    0x03: 'Stack overflow',
+    0x04: 'Invalid stack address',
+    0x05: 'Stack address already assigned',
+    0x06: 'Interrupt already exists',
+    0x07: 'Interrupt not found',
+    0x08: 'Address out of bounds',
+  },
+
 }
 
 let errors = 0
@@ -112,74 +124,12 @@ let error = (t, msg) => {
   debugger
   errors++
   console.error(msg, 'at', t.value, '(' + t.row + ',' + t.col + ')')
+  return null
 }
 
 let runtime_error = code => {
-  let e = 'Unknown runtime error'
-  switch (code) {
-    case 0x01:
-      e = 'Out of memory'
-      break
-    case 0x02:
-      e = 'Stack underflow'
-      break
-    case 0x03:
-      e = 'Stack overflow'
-      break
-    case 0x04:
-      e = 'Invalid stack address'
-      break
-    case 0x05:
-      e = 'Stack address already assigned'
-      break
-    case 0x06:
-      e = 'Interrupt already exists'
-      break
-    case 0x07:
-      e = 'Interrupt not found'
-      break
-    case 0x08:
-      e = 'Address out of bounds'
-      break
-  }
-  console.error(e)
-}
-
-let io_error = code => {
-  let e = 'I/O runtime error'
-  switch (code) {
-    case 0x01:
-      e = 'File not found'
-      break
-    case 0x02:
-      e = 'Cannot open file'
-      break
-    case 0x03:
-      e = 'Cannot close file'
-      break
-    case 0x04:
-      e = 'Cannot lock file'
-      break
-    case 0x05:
-      e = 'Cannot unlock file'
-      break
-    case 0x06:
-      e = 'Invalid file id'
-      break
-    case 0x07:
-      e = 'A floppy is already in the drive'
-      break
-    case 0x08:
-      e = 'No floppy in drive'
-      break
-    case 0x09:
-      e = 'Cannot delete file'
-      break
-    case 0x10:
-      e = 'Drive is not spinning'
-      break
-  }
-  console.error(e)
+  console.error(defaults.runtime_errors[code] || 'Unknown runtime error')
+  return 0
 }
 
 
@@ -188,5 +138,4 @@ export {
   errors,
   error,
   runtime_error,
-  io_error,
 }

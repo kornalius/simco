@@ -193,11 +193,10 @@ export default class Guideo extends Chip {
     const top = this._top
     const width = this._width
 
-    let si = addr
     for (let by = 0; by < h; by++) {
       let ti = top + ((y + by) * width + x)
       for (let bx = 0; bx < w; bx++) {
-        data[ti++] = mem[si++]
+        data[ti++] = mem[addr++]
       }
     }
 
@@ -211,11 +210,10 @@ export default class Guideo extends Chip {
     const width = this._width
     const count = this.rainbow.count
 
-    let si = addr
     for (let by = 0; by < h; by++) {
       let ti = top + ((y + by) * width + x)
       for (let bx = 0; bx < w; bx++) {
-        let c = mem[si++]
+        let c = mem[addr++]
         data[ti] = c < count ? fg : bg === -1 ? data[ti] : bg
         ti++
       }
@@ -224,7 +222,7 @@ export default class Guideo extends Chip {
     return this
   }
 
-  blit_array (arr, x, y, mask = {}) {
+  blit_array (arr, x, y, mask) {
     const data = this._data
     const top = this._top
     const width = this._width
@@ -235,7 +233,8 @@ export default class Guideo extends Chip {
     for (let by = 0; by < h; by++) {
       let ti = top + ((by + y) * width + x)
       for (let bx = 0; bx < w; bx++) {
-        data[ti++] = mask[arr[by]]
+        let a = arr[by]
+        data[ti++] = mask ? mask[a] : a
       }
     }
 
@@ -248,11 +247,10 @@ export default class Guideo extends Chip {
     const top = this._top
     const width = this._width
 
-    let ti = addr
     for (let by = 0; by < h; by++) {
       let si = top + ((by + y) * width + x)
       for (let bx = 0; bx < w; bx++) {
-        mem[ti++] = data[si++]
+        mem[addr++] = data[si++]
       }
     }
 
@@ -274,7 +272,7 @@ export default class Guideo extends Chip {
     return this
   }
 
-  to_array (x, y, w, h, mask = {}) {
+  to_array (x, y, w, h, mask) {
     const data = this._data
     const top = this._top
     const width = this._width
@@ -285,7 +283,8 @@ export default class Guideo extends Chip {
       let ti = top + ((by + y) * width + x)
       let s = ''
       for (let bx = 0; bx < w; bx++) {
-        s += mask[data[ti++]]
+        let d = data[ti++]
+        s += mask ? mask[d] : String.fromCharCode(d)
       }
       arr.push(s)
     }

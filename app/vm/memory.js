@@ -56,6 +56,7 @@ export class Memory {
   get buffer () { return this._buffer }
   get data () { return this._data }
   get view () { return this._view }
+
   get top () { return this._top }
   get bottom () { return this._bottom }
   get size () { return this._size }
@@ -65,29 +66,21 @@ export class Memory {
     return this
   }
 
-  chk_bounds (addr, sz = 4) {
-    if (addr < this._top || addr + sz > this._bottom) {
-      this.hlt(0x08)
-    }
-    return this
-  }
-
-  db (type, addr, ...args) {
+  db (type, addr, args) {
     let sz = data_type_sizes[type]
     let fn = this._view['set' + data_type_fns[type]]
+
     for (let a of args) {
       fn.call(this._view, addr, a)
       addr += sz
     }
+
     return addr
   }
 
-  db_bc (type, addr, ...args) {
-    this.chk_bounds(addr, args.length * data_type_sizes[type])
-    this.db(type, addr, ...args)
+  ld (type, addr) {
+    return this._view['get' + data_type_fns[type]](addr, this._main.LE)
   }
-
-  ld (type, addr) { return this._view['get' + data_type_fns[type]](addr, _vm.littleEndian) }
 
   ldb (addr) { return this.ld('i8', addr) }
 
@@ -97,12 +90,9 @@ export class Memory {
 
   ldf (addr) { return this.ld('f32', addr) }
 
-  ld_bc (type, addr) {
-    this.chk_bounds(addr, data_type_sizes[type])
-    return this.ld(type, addr)
+  st (type, addr, value) {
+    this._view['set' + data_type_fns[type]](addr, value, this._main.LE)
   }
-
-  st (type, addr, value) { this._view['set' + data_type_fns[type]](addr, value, _vm.littleEndian) }
 
   stb (addr, value) { this.st('i8', addr, value) }
 
@@ -112,29 +102,17 @@ export class Memory {
 
   stf (addr, value) { this.st('f32', addr, value) }
 
-  st_bc (type, addr, value) {
-    this.chk_bounds(addr, data_type_sizes[type])
-    this.st(type, addr, value)
+  ldl (addr, size) {
+    return this._data.slice(addr, addr + size - 1)
   }
 
-  ldl (addr, size) { return this._data.slice(addr, addr + size - 1) }
-
-  ldl_bc (addr, size) {
-    this.chk_bounds(addr, size)
-    return this.ldl(addr, size)
-  }
-
-  lds (addr, size) {
-    if (_.isString(addr)) {  // assembler will use lds("")
-      return addr
-    }
-
-    let s = ''
-    size = size || data_type_sizes.str
+  lds (addr, size = data_type_sizes.str) {
+    const data = this._data
     let bottom = Math.min(addr + size - 1, this._bottom)
-    let mem = this._data
+    let s = ''
+
     while (addr <= bottom) {
-      let c = mem[addr++]
+      let c = data[addr++]
       if (c === 0) {
         break
       }
@@ -142,47 +120,27 @@ export class Memory {
         s += String.fromCharCode(c)
       }
     }
+
     return s
   }
 
-  lds_bc (addr, size) {
-    this.chk_bounds(addr, Math.min(size || 0, data_type_sizes.str))
-    return this.lds(addr, size)
+  stl (addr, value, size) {
+    this._data.set(value.subarray(0, size || value.byteLength), addr)
   }
 
-  stl (addr, value, size) { this._data.set(value.subarray(0, size || value.byteLength), addr) }
-
-  stl_bc (addr, value, size) {
-    this.chk_bounds(addr, Math.min(size || 0, value.byteLength))
-    this.stl(addr, value, size)
-  }
-
-  sts (addr, str, size) {
-    size = size || data_type_sizes.str - 1
+  sts (addr, str, size = data_type_sizes.str - 1) {
     let a = _.map(str.split(''), i => i.charCodeAt(0))
     a.length = Math.min(size, a.length)
     this.fill(0, addr, size)
     this._data.set(a, addr)
   }
 
-  sts_bc (addr, str, size) {
-    this.chk_bounds(addr, Math.min(size, data_type_sizes.str))
-    this.sts(addr, str, size)
+  fill (value, top, size) {
+    this._data.fill(value || 0, top, top + size)
   }
 
-  fill (value, top, size) { this._data.fill(value || 0, top, top + size) }
-
-  fill_bc (value, top, size) {
-    this.chk_bounds(top, size)
-    this.fill(value, top, size)
-  }
-
-  copy (src, tgt, size) { this._data.copyWithin(tgt, src, src + size - 1) }
-
-  copy_bc (src, tgt, size) {
-    this.chk_bounds(src, size)
-    this.chk_bounds(tgt, size)
-    this.copy(src, tgt, size)
+  copy (src, tgt, size) {
+    this._data.copyWithin(tgt, src, src + size - 1)
   }
 
   read (addr, type = 'i8') {
@@ -216,66 +174,36 @@ export class Memory {
     return addr + sz
   }
 
-  from_string (addr, str) {
+  from_string (addr, str, mask) {
     const data = this._data
     let w = str.length
 
     let ti = addr
     for (let x = 0; x < w; x++) {
-      data[ti++] = str.charCodeAt(x)
+      let c = str.charCodeAt(x)
+      data[ti++] = mask ? mask[c] : c
     }
 
     return ti
   }
 
-  from_string_mask (addr, str, mask) {
-    const data = this._data
-    let w = str.length
-
-    let ti = addr
-    for (let x = 0; x < w; x++) {
-      data[ti++] = mask[str[x]]
-    }
-
-    return ti
-  }
-
-  to_string (addr, size) {
-    const data = this._data
-    let s = ''
-
-    let ti = addr
-    for (let y = 0; y < size; y++) {
-      s += String.fromCharCode(data[ti++])
-    }
-
-    return s
-  }
-
-  to_string_mask (addr, size, mask) {
-    const data = this._data
-    let s = ''
-
-    let ti = addr
-    for (let y = 0; y < size; y++) {
-      s += String.fromCharCode(mask[data[ti++]])
-    }
-
-    return s
-  }
-
-  from_array (addr, arr) {
+  from_array (addr, arr, mask) {
     let h = arr.length
 
     let ti = addr
     for (let y = 0; y < h; y++) {
-      ti = this.from_string(ti, arr[y])
+      if (_.isArray(arr[y])) {
+        ti = this.from_array(ti, arr[y], mask)
+      }
+      else {
+        ti = this.from_string(ti, arr[y], mask)
+      }
     }
 
     return ti
   }
 
-  from_2d_array (addr, frame, count, width, arr) {
+  from_2d_array (addr, frame, count, width, arr, mask) {
     let h = arr.length
     let fullWidth = width * count
     let offset = frame * width
@@ -283,56 +211,32 @@ export class Memory {
     for (let y = 0; y < h; y++) {
       let ti = addr + y * fullWidth + offset
       if (_.isArray(arr[y])) {
-        this.from_array_mask(ti, arr[y])
+        this.from_2d_array(ti, arr[y], mask)
       }
       else {
-        this.from_string(ti, arr[y])
+        this.from_string(ti, arr[y], mask)
       }
     }
   }
 
-  from_array_mask (addr, arr, mask = {}) {
-    let h = arr.length
+  to_string (addr, size, mask) {
+    const data = this._data
+    let s = ''
 
     let ti = addr
-    for (let y = 0; y < h; y++) {
-      if (_.isArray(arr[y])) {
-        ti = this.from_array_mask(ti, arr[y], mask)
-      }
-      else {
-        ti = this.from_string_mask(ti, arr[y], mask)
-      }
+    for (let y = 0; y < size; y++) {
+      let d = data[ti++]
+      s += String.fromCharCode(mask ? mask[d] : d)
     }
 
-    return ti
+    return s
   }
 
-  from_2d_array_mask (addr, frame, count, width, arr, mask = {}) {
-    let h = arr.length
-    let fullWidth = width * count
-    let offset = frame * width
-
-    for (let y = 0; y < h; y++) {
-      let ti = addr + y * fullWidth + offset
-      this.from_string_mask(ti, arr[y], mask)
-    }
-  }
-
-  to_array (addr, w, h) {
+  to_array (addr, w, h, mask) {
     let arr = []
 
     for (let y = 0; y < h; y++) {
-      arr.push(this.to_string(addr + y * w, w))
-    }
-
-    return arr
-  }
-
-  to_array_mask (addr, w, h, mask) {
-    let arr = []
-
-    for (let y = 0; y < h; y++) {
-      arr.push(this.to_string_mask(addr + y * w, w, mask))
+      arr.push(this.to_string(addr + y * w, w, mask))
     }
 
     return arr

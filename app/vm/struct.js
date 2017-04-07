@@ -39,7 +39,7 @@ export default class Struct {
   format_by_name (name) { return _.find(this.format, { name }) }
 
   assign_properties (offset) {
-    for (let name of this.names) {
+    for (let name of this.keys) {
       let f = this.format_by_name(name)
 
       let type = f.type
@@ -53,7 +53,7 @@ export default class Struct {
       }
       else {
         size = this.size(type)
-        if (!_.isNumber(type) && ['i16', 's16', 'i32', 's32', 'f32'].indexOf(type) !== -1) {
+        if (!_.isNumber(type) && _.includes(['i16', 's16', 'i32', 's32', 'f32'], type)) {
           while (offset % 2 !== 0) { offset++ }
         }
         this[n] = { name, type, size, top: offset, bottom: offset + size - 1 }
@@ -79,9 +79,9 @@ export default class Struct {
 
   format_size (fmt) {
     let sz = 0
-    let names = _.map(fmt, st => st.name)
+    let keys = _.map(fmt, 'name')
 
-    for (let name of names) {
+    for (let name of keys) {
       let f = _.find(this.format, { name })
       let type = f.type
       sz += _.isObject(type) ? this.format_size(type) : data_type_size(type)
@@ -90,7 +90,7 @@ export default class Struct {
     return sz
   }
 
-  get names () { return _.map(this.format, st => st.name) }
+  get keys () { return _.map(this.format, 'name') }
 
   size (type) {
     if (!type) {
@@ -114,11 +114,12 @@ export default class Struct {
       buf = new ArrayBuffer(this.size())
     }
     buf.set(this.memory.data, offset)
+
     return buf
   }
 
   from_object (obj) {
-    for (let name of this.names) {
+    for (let name of this.keys) {
       if (this[name] instanceof Struct) {
         this[name].from_object(obj[name])
       }
@@ -126,12 +127,14 @@ export default class Struct {
         this[name] = obj[name]
       }
     }
+
     return this
   }
 
   to_object () {
     let s = {}
-    for (let name of this.names) {
+
+    for (let name of this.keys) {
       let value = this[name]
       if (value instanceof Struct) {
         s[name] = value.to_object()
@@ -140,6 +143,7 @@ export default class Struct {
         s[name] = value
       }
     }
+
     return s
   }
 

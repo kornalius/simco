@@ -10,14 +10,20 @@ class StackEntry {
     this._size = size || data_type_size(type)
     this._top = offset
     this._bottom = this._top + this._size - 1
+
     this._type = type
+
     this._rolling = rolling || false
 
     this.list[this._top] = this
+
+    this.reset()
   }
 
   reset () {
     this._ptr = this._top
+
+    return this
   }
 
   destroy () {
@@ -40,25 +46,32 @@ class StackEntry {
   get avail () { return this.total_size - this.used }
 
   push (...value) {
-    let sz = this._size
-    let t = this._type
-    let top = this._top
-    let bottom = this._bottom
-    let rolling = this._rolling
+    const sz = this._size
+    const t = this._type
+    const top = this._top
+    const bottom = this._bottom
+    const rolling = this._rolling
+
+    let ptr = this._ptr
+
     for (let v of value) {
-      if (rolling && this._ptr >= bottom) {
+      if (rolling && ptr >= bottom) {
         this.copy(top + sz, top, bottom - sz)
-        this._ptr -= sz
+        ptr -= sz
       }
-      if (this._ptr + sz < bottom) {
-        this.write(v, this._ptr, t)
-        this._ptr += sz
+      if (ptr + sz < bottom) {
+        this.write(v, ptr, t)
+        ptr += sz
       }
       else {
         runtime_error(0x03)
         break
       }
     }
+
+    this._ptr = ptr
+
+    return this
   }
 
   pop () {
@@ -66,10 +79,8 @@ class StackEntry {
       this._ptr -= this._size
       return this.read(this._ptr, this._type)
     }
-    else {
-      runtime_error(0x02)
-      return 0
-    }
+    runtime_error(0x02)
+    return 0
   }
 
 }
@@ -85,6 +96,8 @@ export default class Stack {
 
   reset () {
     this._list = {}
+
+    return this
   }
 
   destroy () {
@@ -94,80 +107,37 @@ export default class Stack {
   get list () { return this._list }
 
   new (offset, max, type, size, rolling) {
-    let s = this._list[offset]
-    if (!s) {
-      return new StackEntry(this, ...arguments)
-    }
-    else {
-      runtime_error(0x04)
-      return null
-    }
+    return !this._list[offset] ? new StackEntry(this, ...arguments) : runtime_error(0x04)
   }
 
   push (offset, ...values) {
     let s = this._list[offset]
-    if (s) {
-      return s.push(...values)
-    }
-    else {
-      runtime_error(0x04)
-      return 0
-    }
+    return s ? s.push(...values) : runtime_error(0x04)
   }
 
   pop (offset) {
     let s = this._list[offset]
-    if (s) {
-      return s.pop()
-    }
-    else {
-      runtime_error(0x04)
-      return 0
-    }
+    return s ? s.pop() : runtime_error(0x04)
   }
 
   used (offset) {
     let s = this._list[offset]
-    if (s) {
-      return s.used
-    }
-    else {
-      runtime_error(0x04)
-      return 0
-    }
+    return s ? s.used : runtime_error(0x04)
   }
 
   max (offset) {
     let s = this._list[offset]
-    if (s) {
-      return s.max
-    }
-    else {
-      runtime_error(0x04)
-      return 0
-    }
+    return s ? s.max : runtime_error(0x04)
   }
 
   size (offset) {
     let s = this._list[offset]
-    if (s) {
-      return s.size
-    }
-    else {
-      runtime_error(0x04)
-      return 0
-    }
+    return s ? s.size : runtime_error(0x04)
   }
 
   type (offset) {
     let s = this._list[offset]
-    if (s) {
-      return s.type
-    }
-    else {
-      runtime_error(0x04)
-      return 0
-    }
+    return s ? s.type : runtime_error(0x04)
   }
 
 }
