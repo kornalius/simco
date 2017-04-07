@@ -148,7 +148,7 @@ export class ScanlinesOverlay extends Overlay {
   constructor (overlays, width, height, options) {
     super(overlays, width, height)
 
-    this._gap = _.get(options, 'gap', 3)
+    this._gap = _.get(options, 'gap', 4)
     this._alpha = _.get(options, 'alpha', 0.35)
 
     this.create()
@@ -176,7 +176,7 @@ export class ScanlineOverlay extends Overlay {
     super(overlays, width, height)
 
     this._rate = _.get(options, 'rate', 50)
-    this._speed = _.get(options, 'speed', 16)
+    this._speed = _.get(options, 'speed', 26)
     this._alpha = _.get(options, 'alpha', 0.1)
 
     this.create()
@@ -193,7 +193,7 @@ export class ScanlineOverlay extends Overlay {
     for (let y = 0; y < len; y += sz) {
       aa = l / h * a
       for (let x = y; x < y + sz; x += 4) {
-        pixels.set([25, 25, 25, aa], x)
+        pixels.set([50, 50, 50, aa], x)
       }
       l++
     }

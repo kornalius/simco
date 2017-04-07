@@ -201,7 +201,7 @@ export default class Guideo extends Chip {
       }
     }
 
-    return this.update(true)
+    return this
   }
 
   blit_mask (addr, x, y, w, h, fg = 15, bg = -1) {
@@ -221,7 +221,7 @@ export default class Guideo extends Chip {
       }
     }
 
-    return this.update(true)
+    return this
   }
 
   blit_array (arr, x, y, mask = {}) {
@@ -238,6 +238,8 @@ export default class Guideo extends Chip {
         data[ti++] = mask[arr[by]]
       }
     }
+
+    return this
   }
 
   copy_rect (x, y, w, h, addr) {
@@ -254,7 +256,22 @@ export default class Guideo extends Chip {
       }
     }
 
-    return ti
+    return this
+  }
+
+  fillrect (x, y, w, h, color) {
+    const data = this._data
+    const top = this._top
+    const width = this._width
+
+    for (let by = 0; by < h; by++) {
+      let si = top + ((by + y) * width + x)
+      for (let bx = 0; bx < w; bx++) {
+        data[si++] = color
+      }
+    }
+
+    return this
   }
 
   to_array (x, y, w, h, mask = {}) {

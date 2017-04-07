@@ -29,9 +29,9 @@ const defaults = {
   },
 
   guideo: {
-    width: 320,
-    height: 240,
-    scale: 3,
+    width: 240,
+    height: 168,
+    scale: 4,
   },
 
   rainbow: {
@@ -41,18 +41,18 @@ const defaults = {
 
   fonzo: {
     count: 256,
-    width: 7,
-    height: 9,
+    width: 6,
+    height: 7,
   },
 
   orwell: {
-    width: 320 / 4,
-    height: 240 / 6,
+    width: 240 / 6,
+    height: 168 / 7,
   },
 
   beagle: {
-    width: 4,
-    height: 6,
+    width: 6,
+    height: 7,
     color: 15,
     blinkrate: 500,
   },

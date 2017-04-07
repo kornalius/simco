@@ -275,12 +275,33 @@ export class Memory {
     return ti
   }
 
+  from_2d_array (addr, frame, count, width, arr) {
+    let h = arr.length
+    let fullWidth = width * count
+    let offset = frame * width
+
+    for (let y = 0; y < h; y++) {
+      let ti = addr + y * fullWidth + offset
+      if (_.isArray(arr[y])) {
+        this.from_array_mask(ti, arr[y])
+      }
+      else {
+        this.from_string(ti, arr[y])
+      }
+    }
+  }
+
   from_array_mask (addr, arr, mask = {}) {
     let h = arr.length
 
     let ti = addr
     for (let y = 0; y < h; y++) {
-      ti = this.from_string_mask(ti, arr[y], mask)
+      if (_.isArray(arr[y])) {
+        ti = this.from_array_mask(ti, arr[y], mask)
+      }
+      else {
+        ti = this.from_string_mask(ti, arr[y], mask)
+      }
     }
 
     return ti
