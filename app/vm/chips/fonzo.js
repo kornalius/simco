@@ -14,7 +14,7 @@ export default class Fonzo extends Chip {
   reset () {
     super.reset()
 
-    this.memory.from_array_mask(this._top + 33 * this._cell_size, [
+    this.memory.from_array(this._top + 33 * this._cell_size, [
       [
         '      ',
         '   w  ',
@@ -866,8 +866,8 @@ export default class Fonzo extends Chip {
     this.test()
   }
 
-  draw (x, y, c, fg = 15, bg = 0) {
-    return this.guideo.blit_mask(this._top + c * this._cell_size, x, y, this._width, this._height, fg, bg)
+  draw (x, y, c, fg, bg) {
+    return this.guideo.blit(this._top + c * this._cell_size, x, y, this._width, this._height, fg, bg)
   }
 
   test () {
@@ -881,21 +881,21 @@ export default class Fonzo extends Chip {
     let xx = 0
     let y = 4 * ch
     for (let x = 33; x < 73; x++) {
-      this.draw(xx * cw, y, x, _.random(2, 15), 1)
+      this.draw(xx * cw, y, x, _.random(2, 15))
       xx++
     }
 
     xx = 0
     y = 5 * ch
     for (let x = 73; x < 113; x++) {
-      this.draw(xx * cw, y, x, _.random(2, 15), 1)
+      this.draw(xx * cw, y, x, _.random(2, 15))
       xx++
     }
 
     xx = 0
     y = 6 * ch
     for (let x = 113; x < 126; x++) {
-      this.draw(xx * cw, y, x, _.random(2, 15), 1)
+      this.draw(xx * cw, y, x, _.random(2, 15))
       xx++
     }
 

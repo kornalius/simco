@@ -94,7 +94,8 @@ export class BorderOverlay extends Overlay {
   get color () { return this._color }
   set color (value) {
     this._color = value
-    this._graphics.beginFill(this.guideo.rainbow.color(this._color), 255)
+    let c = this.guideo.rainbow.color_rgb(this._color)
+    this._graphics.beginFill(c, 1)
     this._graphics.drawRect(0, 0, this._width, this._height)
     this._graphics.endFill()
   }
@@ -118,6 +119,9 @@ export class ScreenOverlay extends Overlay {
     this._sprite.x = this.main.defaults('border.size', 0)
     this._sprite.y = this.main.defaults('border.size', 0)
 
+    this._cursorLayer = new PIXI.Container()
+    this._sprite.addChild(this._cursorLayer)
+
     this._spritesLayer = new PIXI.Container()
     this._sprite.addChild(this._spritesLayer)
 
@@ -134,6 +138,7 @@ export class ScreenOverlay extends Overlay {
 
   get spritesLayer () { return this._spritesLayer }
   get mouseLayer () { return this._mouseLayer }
+  get cursorLayer () { return this._cursorLayer }
 
   update () {
     this.updateTexture(this._data, this._palette)

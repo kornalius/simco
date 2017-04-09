@@ -178,29 +178,27 @@ export class Memory {
     const data = this._data
     let w = str.length
 
-    let ti = addr
     for (let x = 0; x < w; x++) {
-      let c = str.charCodeAt(x)
-      data[ti++] = mask ? mask[c] : c
+      let c = str[x]
+      data[addr++] = mask ? mask[c] : c
     }
 
-    return ti
+    return addr
   }
 
   from_array (addr, arr, mask) {
     let h = arr.length
 
-    let ti = addr
     for (let y = 0; y < h; y++) {
       if (_.isArray(arr[y])) {
-        ti = this.from_array(ti, arr[y], mask)
+        addr = this.from_array(addr, arr[y], mask)
       }
       else {
-        ti = this.from_string(ti, arr[y], mask)
+        addr = this.from_string(addr, arr[y], mask)
       }
     }
 
-    return ti
+    return addr
   }
 
   from_2d_array (addr, frame, count, width, arr, mask) {
@@ -211,7 +209,7 @@ export class Memory {
     for (let y = 0; y < h; y++) {
       let ti = addr + y * fullWidth + offset
       if (_.isArray(arr[y])) {
-        this.from_2d_array(ti, arr[y], mask)
+        this.from_2d_array(ti, frame, count, width, arr[y], mask)
       }
       else {
         this.from_string(ti, arr[y], mask)

@@ -66,13 +66,13 @@ export default class Rainbow extends Chip {
   get cyan () { return 14 }
   get white () { return 15 }
 
-  to_red (rgba) { return this.rgba(rgba).r }
+  to_red (rgba) { return this.split(rgba).r }
 
-  to_green (rgba) { return this.rgba(rgba).g }
+  to_green (rgba) { return this.split(rgba).g }
 
-  to_blue (rgba) { return this.rgba(rgba).b }
+  to_blue (rgba) { return this.split(rgba).b }
 
-  to_alpha (rgba) { return this.rgba(rgba).a }
+  to_alpha (rgba) { return this.split(rgba).a }
 
   split (rgba) {
     const LE = this._LE
@@ -95,6 +95,12 @@ export default class Rainbow extends Chip {
       data[c] = this.rgba(r, g, b, a)
     }
     return data[c]
+  }
+
+  color_rgb (c) {
+    c = this._data[c]
+    c = this._LE ? reverse(c) : c
+    return c >> 8
   }
 
   find_color (r, g, b, a) {

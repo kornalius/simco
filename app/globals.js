@@ -25,7 +25,7 @@ const defaults = {
 
   border: {
     size: 64,
-    color: 1,
+    color: 12,
   },
 
   guideo: {
@@ -55,6 +55,7 @@ const defaults = {
     height: 7,
     color: 15,
     blinkrate: 500,
+    visible: true,
   },
 
   violet: {

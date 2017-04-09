@@ -111,6 +111,7 @@ export default class Guideo extends Chip {
   get screenSprite () { return this._screen.sprite }
   get spritesLayer () { return this._screen.spritesLayer }
   get mouseLayer () { return this._screen.mouseLayer }
+  get cursorLayer () { return this._screen.cursorLayer }
 
   get texture () { return this._screen.texture }
   get canvasBuffer () { return this._screen.canvasBuffer }
@@ -187,35 +188,29 @@ export default class Guideo extends Chip {
     return data[i]
   }
 
-  blit (addr, x, y, w, h) {
-    const mem = this.memory.data
-    const data = this._data
-    const top = this._top
-    const width = this._width
-
-    for (let by = 0; by < h; by++) {
-      let ti = top + ((y + by) * width + x)
-      for (let bx = 0; bx < w; bx++) {
-        data[ti++] = mem[addr++]
-      }
-    }
-
-    return this
-  }
-
-  blit_mask (addr, x, y, w, h, fg = 15, bg = -1) {
+  blit (addr, x, y, w, h, fg, bg) {
     const mem = this.memory.data
     const data = this._data
     const top = this._top
     const width = this._width
     const count = this.rainbow.count
 
+    let hasFg = !_.isUndefined(fg)
+    let hasBg = !_.isUndefined(bg)
+
     for (let by = 0; by < h; by++) {
       let ti = top + ((y + by) * width + x)
       for (let bx = 0; bx < w; bx++) {
         let c = mem[addr++]
-        data[ti] = c < count ? fg : bg === -1 ? data[ti] : bg
-        ti++
+        if (c < count) { // not transparent
+          if (hasFg) {
+            c = fg
+          }
+        }
+        else {
+          c = hasBg ? bg : data[ti]
+        }
+        data[ti++] = c
       }
     }
 
@@ -315,6 +310,8 @@ export default class Guideo extends Chip {
   }
 
   test () {
+    this.guideo.clear(12)
+
     this.pixel(10, 10, 13)
     this.pixel(20, 10, 5)
     this.pixel(30, 10, 6)

@@ -19,9 +19,9 @@ export default class Orwell extends Chip {
     let w = this._width
     let h = this._height
     let mem = this._data
-    let fnt = this.fonzo
-    let fw = fnt.width
-    let fh = fnt.height
+    let fonzo = this.fonzo
+    let fw = fonzo.width
+    let fh = fonzo.height
 
     let idx = 0
     for (let y = 0; y < h; y++) {
@@ -29,19 +29,17 @@ export default class Orwell extends Chip {
       for (let x = 0; x < w; x++) {
         let c = mem[idx]
         if (c) {
-          fnt.draw(x * fw, py, c, mem[idx + 1], mem[idx + 2])
+          fonzo.draw(x * fw, py, c, mem[idx + 1], mem[idx + 2])
         }
         idx += 3
       }
     }
-
-    return this.update()
   }
 
   draw_char (x, y, c, fg, bg) {
-    let fnt = this.fonzo
-    fnt.draw(x * fnt.width, y * fnt.height, c, fg, bg)
-    return this.update()
+    let fonzo = this.fonzo
+    fonzo.draw(x * fonzo.width, y * fonzo.height, c, fg, bg)
+    return this
   }
 
   index (x, y) {
@@ -59,7 +57,7 @@ export default class Orwell extends Chip {
     return { ch: mem[tidx], fg: mem[tidx + 1], bg: mem[tidx + 2] }
   }
 
-  put_char (ch, fg = 1, bg = 0) {
+  put_char (ch, fg, bg) {
     switch (ch.charCodeAt(0)) {
       case 13:
       case 10:

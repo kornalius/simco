@@ -62,7 +62,7 @@ export default class Mickey extends Chip {
 
     this._mouseLayer.removeChildren()
 
-    this.memory.from_2d_array_mask(this._top, 0, this.count, this._width, [
+    this.memory.from_2d_array(this._top, 0, this.count, this._width, [
       '..    ',
       '.w.   ',
       '.ww.  ',
